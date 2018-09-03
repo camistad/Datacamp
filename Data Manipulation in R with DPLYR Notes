@@ -1,0 +1,57 @@
+#Section 1 - Introduction to DPLYR
+#DPLYR: Package for accessing data information (summary statistics, group differences, etc.)
+  #Introduces a grammar of data manipulation
+  #5 Functions
+  #Fast - internal structure written in C++ -> Speed of C + Ease of R
+#Important Terms: tbl (structure); %>% (piping operator)
+
+#Section 2 - tbl, a special type of data.frame
+#provides a new data structure for R
+#can turns dataframes into tbls with tbl_df()
+  #Doing so cuts out superfluous rows and columns
+  #Also tells you dimensions of full dataset
+#To see complete displays of tbl data, use glimpse()
+  #Shows data types and initial values of each variable in dataset
+  
+#Section 3 - The five verbs and select in more detail
+  #5 Functions (verbs) that do the basic tasks of data manipulation
+    #select(), which returns a subset of the columns,
+    #filter(), that is able to return a subset of the rows,
+    #arrange(), that reorders the rows according to single or multiple variables,
+    #mutate(), used to add columns from existing data,
+    #summarise(), which reduces each group to a single row by calculating aggregate measures.
+  #Can combine to manipulate data in advanced methods
+  #Useful when data is tidy: columns = variables, rows = observations
+    #Variables - Select / Mutate
+    #Observations - Filter / Arrange
+    #Groups - Summarise
+  #select
+    #select(tbl, columns to select)
+      #Separate columns to select with comma
+      #select(df, Group, Sum)
+  #select helper functions
+    #starts_with("X"): every name that starts with "X",
+    #ends_with("X"): every name that ends with "X",
+    #contains("X"): every name that contains "X",
+    #matches("X"): every name that matches "X", where "X" can be a regular expression,
+    #num_range("x", 1:5): the variables named x01, x02, x03, x04 and x05,
+    #one_of(x): every name that appears in x, which should be a character vector.
+  
+#Section 4 - The second of five verbs: mutate
+  #Adds new variables to a dataset, assembled from existing data in dataset
+  #mutate(tbl, new column name = expression)
+    #mutate(df, Sum = 'dose 1' + 'dose 2')
+#Section 5 - The third of five verbs: filter
+  #Returns of a new version of the dataset that only includes certain rows
+  #filter(tbl, logical text)
+    #Filter returns all the rows the return TRUE to that logical test
+      #filter(f1, Cancelled == 1)
+  #Requires knowledge of all logical operators; use ?comparison to find all
+    #x < y, TRUE if x is less than y
+    #x <= y, TRUE if x is less than or equal to y
+    #x == y, TRUE if x equals y
+    #x != y, TRUE if x does not equal y
+    #x >= y, TRUE if x is greater than or equal to y
+    #x > y, TRUE if x is greater than y
+    #x %in% c(a, b, c), TRUE if x is in the vector c(a, b, c)
+
