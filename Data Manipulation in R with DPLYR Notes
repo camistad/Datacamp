@@ -54,4 +54,22 @@
     #x >= y, TRUE if x is greater than or equal to y
     #x > y, TRUE if x is greater than y
     #x %in% c(a, b, c), TRUE if x is in the vector c(a, b, c)
+#Section 6 - Almost there: the arrange verb
+  #Reorders rows of dataset based on content
+  #arrange(tbl, column name)
+    #arrange(hflights, DepDelay)
+    #arrange allow reorders smallest to largest, alphabetical order
+    #Add additional tiebreakers with comma
+    #desc() arranges in descending order (largest to smallest)
+      #wrap around specific column name
+#Section 7 - Last but not least: summarise
+  #Uses data to create a new dataset of summary statistics to describe data
+    #You can decide which statistics to include in dataset
+    #summarise(tbl, new column name = expression)
+      #summarise, df, sum = sum(A),
+                      avg = mean(B),
+                      var = var(B))
+  #aggregate functions: takes a vector of values as input and returns a single output
+    #R Base package: min, mean, sum, var, sd, length, IQR, max, median
+    #dplyr: first, last, nth, n, n_distinct
 
