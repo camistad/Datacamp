@@ -72,4 +72,32 @@
   #aggregate functions: takes a vector of values as input and returns a single output
     #R Base package: min, mean, sum, var, sd, length, IQR, max, median
     #dplyr: first, last, nth, n, n_distinct
-
+#Section 8 - Chaining your functions: the pipe operator
+  #Creating objects for individual functions can take up too much space in memory
+  #Can avoid passing objects between functions by piping
+  #Pipe %>% - from magrittr package - an operator placed between object and function
+  #[Some object] [pipe] [some function][arguments]
+  #object %>% function(____, arg2, arg3,...)
+    #Pipe takes object on left and passes it to function on right as first argument in function
+    #think of pipe as the word "then" in a sentence
+#Section 9 - Group insights with group_by    
+  #In a summarise call, values of the new row summarise entire dataset
+  #Good to make observations of groups of rows in dataset
+  #group_by(tbl, column to group by)
+  #group_by(df, Group)
+  #by itself, group_by just gives new table grouped together (arranged by group)
+  #when combined with summarise, dplyr calculates new summary for each group
+    #Can also combine group_by with mutate to form within group rankings  
+  #Combine group_by with mutate
+  #When you mutate grouped data, mutate calculates new variables indep't for each group
+  #Useful for when mutate uses rank function to calculate within group ranks
+  #rank() takes a group of values and calculates the rank of each value with the group
+    #call: rank(c(21,22,24,23))
+    #output: [1] 1 2 4 3
+#Section 10 - dplyr and databases
+  #dplyr's designed to work with any tabular data
+    #data frame, data table, database
+    #can use same 5 verbs to manipulate any of these structures
+  #Can even create tbl version via tbl_dt for data table & tbl for database
+  #Can store large datasets outside of R in database and then use dplyr to manipulate data
+    #& retrieve results
