@@ -1,0 +1,46 @@
+#String Manipulation with stringr
+#Strings: Elements of character vectors
+#stringr is a package for manipulation strings
+  #better than base because consistent syntax, simplified options, sensible defaults
+#requires use of regular expressions: a language for describing patterns in text
+  #e.g. Starts with C or a dollar sign followed by 2 or more digits
+#rebus package
+  #Find and replace parts of strings
+  #Read in text 
+#Entering strings
+  #\ is used as an escape clause, tells R to treat certain keyboard entries as their
+  #actual text, rather than a special character
+  #e.g. can use backslash to escape a double quote in character elements
+#When to use " vs. ' for wrapping text
+  #No quotes in the string, use double quotes
+    #e.g. "hi!"
+  #Double quotes in the string, use single quotes
+    #e.g. 'I said "hi!"'
+  #Double and single quotes in the string, use double quotes + \ escape clause
+    #e.g. "I'd say \"hi!\""
+#Turning numbers into strings
+    #Common use of strings is reporting numerical results
+    #Allows ability to automate, update, and use in future
+    #Recommends format or formatC
+      #Give you control of how a number is represented as a string
+  #Fixed and scientific formats
+    #Fixed: decimal point between ones and tenths
+    #Scientific: decimal point after first digit
+      #6371 = 6.371 x 10^3
+      #6.371 = 6.371e+3
+    #Helps read order of magnitude    
+#format and format c
+  #Take a vector of numbers as input
+  #format: scientific = whether to use fixed (false) or scientific (true) format
+  #formatc: format = whether to use fixed("f") or scientific("t")
+#Putting strings together
+  #paste() - takes strings as input and puts it together
+    #sep argument, controls character used to separate arguments
+    #paste() gets useful to pass in vectors of strings
+      #Every vector passed in gets recycled to length of longest vector
+        #once all vectors recycled to same length, strings combined element by element
+        #recycling behavior means vector passed in can all be different lengths
+  #usually, you use paste with a mix of fixed strings and variables
+    #collapse argument further collapses all resulting strings into 1, 
+      #with specified character between them
+    #Can use paste to annotate numbers, etc.
