@@ -90,4 +90,103 @@
     #can combine with lapply to conduct some function on each list
   #str_replace() replaces a pattern in input strings with specified replacement string
     #str_replace(x, pattern = "y", replacement = "z"
-
+#Regular Expressions
+  #Language for describing patterns in strings
+  #a regex is just a sequence of characters
+    #language assigns special meaning to some characters
+    #e.g. ^.[\d]+
+      #"the start of the string, followed by any single character, followed by one or more digits
+      #carat^, dot., square brackets [], backslash d \d, and plus + all have special meaning
+  #regex can be used in any stringr function that has a pattern argument
+    #place in double brackets, e.g. pattern = "^.\\d+"
+    #because \ has a special meaning in r strings, you have to escape them with another \
+  #if use rebus package, regular expression looks different
+    #START %R%
+      #ANY_CHAR %R%
+      #one_or_more(DGT)
+      #where %R% is rebus' way to combine parts in a regex, similar to "then" statement
+    #rebus takes care of any escaping
+    #rebus can wildcard match a single character with ANY_CHAR, similar to dot . 
+  #str_view: takes a string, add pattern
+    #open an html view with any matches to pattern highlighted
+  #str_extract(x, pattern) - str_extract() returns just the pattern of the string 
+    #that matched the pattern
+  #regex review:
+    #start of string: regex = ^ rebus = START
+    #end of string:   regex = $ rebus = END
+    #any single char: regex = . rebus = ANY_CHAR
+    #literal dot, carat, dollar: regex = \. \^ \$ rebus = DOT, CARAT, DOLLAR
+  #Alternation: looks like logical OR in R
+    #dog|cat: match pattern dog or match pattern cat
+    #Rebus: use function or; e.g. or("dog", "cat")
+  #character classes: similar to ANY_CHAR, instead of matching single characters
+    #they match any single character in that set 
+      #aka "match one and only one of the following characters"
+    #char_class("Aa") will match a lower or upper case A
+    #negated_char_class: specify any character string not in set
+      #essentially the opposite
+  #repetition: specify pattern that repeats
+    #optional         regex: ?      rebus: optional()
+    #Zero + times     regex: *      rebus: zero_or_more()
+    #1+ times         regex: +      rebus: one_or_more()
+    #B/w n & m times  regex: {n}{m} rebus: repeated()
+#Shortcuts
+  #regex provides some shortcuts for specifying things
+  #e.g. specify range with - such as char_class("0-9") or char_class("a-z")
+  #DGT in rebus or \d in regex is equivalent to char_class("0-9")
+  #WRD in rebus or \w in regex is equivalent to char_class("a-zA-z0-9_")
+    #aka. any lower or upper case letter, digit, or underscore
+  #SPC in rebus or \s is equivalent to a whitespace character (space, tab, newline)
+#Capturing
+  #a way to group parts of a pattern together
+  #in rebus, wrap part of pattern you wish to capture with capture() function
+    #rebus: capture(ANY_CHAR) %R% "a"
+    #regex: (.)a
+  #capturing doesn't change pattern that's matched, just indicates you want to do
+    #something with piece of pattern
+  #str_match() is designed to work with patterns that include captures
+    #str_match() returns matrix where each row corresponds to input string
+      #column 1 will be entire match (similar to str_extract)
+      #columns 2+ will be for captured groups
+    #useful when you want to access different pieces of a pattern
+    #e.g. if you use strings to extract cash amounts, can capture dollars or cents
+  #?: indicates a non-capturing group - in regex
+    #need grouping to distinguish 
+      #e.g. difference between (dog|cat) and do(g|c)at
+    #rebus has a capture = TRUE argument if you want to capture too
+      #e.g. or("dog", "cat", capture = TRUE) == regex's (dog|cat)
+        #can also just wrap with capture()
+#backreferences
+  #referring to a captured part of a pattern
+  #uses simple count from left to right
+  #Rebus: REF1 == regex \1; REF2 == regex \2 ... REF9 == regex \9
+  #can use backreferences in a pattern 
+    #SPC %R% 
+    #capture(one_or_more(WRD) %R%
+    #SPC %R%
+    #REF1
+    #here REF1 refers to repeating capture(one_or_more(WRD)
+  #can also use backreferences in a replacement (e.g. str_replace)
+    #replacement = str_c(" ", REF1))
+      #can replace a repeated word with a single one
+  #to do backreferences you need to 1) capture the part of the pattern to reference
+    #2) refer to it with REF# (e.g. REF1)
+#Unicode
+  #associates each character with a code point
+  #e.g. a has code 61; mu has code 3BC
+  #can match unicode in regex by specifying codepoint in pattern
+    #so to match mu just need to know the codepoint
+  #can match categories, scripts, blocks, with \p followed by {name}
+  #rebus can look for unicode too
+    #can match unicode accents with rebus' pattern = UP_DIACRITIC
+      #doing so matches any accent in a text
+  #note that sometimes unicodes use two code points
+    #ANY_CHAR will only take the first code point
+    #when many code points, use GRAPHEME rather than ANY_CHAR
+#A case study, reading a play
+  
+      
+  
+    
+  
+  
