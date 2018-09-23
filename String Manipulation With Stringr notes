@@ -44,3 +44,50 @@
     #collapse argument further collapses all resulting strings into 1, 
       #with specified character between them
     #Can use paste to annotate numbers, etc.
+#Introducing stringr
+  #powerful but easy to learn
+  #built on stringi
+    #distills most common operations of stringi
+  #concise and consistent
+    #all functions start with str_
+    #all functions take a vector of strings as the first argument
+  #str_c() - stringr function of paste / paste0: uses empty strings as separator by default
+    #also differs from paste in how it handles missing values
+       #paste turns missing values into the string "NA"
+       #str_c propagates missing values 
+       #combining any strings with a missing value will result in another missing value
+  #str_length() - takes a vector of strings as input and returns the # of characters in each string
+    #similar to nchar()
+  #str_sub() - extracts parts of strings based on their location
+    #function(string, start = 1L, end = -1L)
+    #start and end specify the boundaries of the piece to extract in characters
+    #str_sub(x,y,z) start extract of x at y up to z
+      #str_sub(x,-y,-z) start extract of x at y character from end up to z character from end
+  #str_replace_na() replaces missing values with any string you choose
+#Hunting for a match
+  #most powerful tools = strings + pattern
+    #finding strings that contain a pattern, splitting strings, replacing parts of string 
+    #that match a pattern
+  #stringr function that look for matches
+    #all take a pattern argument
+      #str_detect() - takes a vector of strings + pattern, returns logical vector thats
+        #true for each string that contains a pattern and false otherwise
+        #answer's question: does the string contain the pattern?
+         #str_detect(x, pattern = "word")
+          #pattern can be a regex (e.g. starts with "y")
+          #can wrap a pattern in fixed() - useful when there's dots, dashes, brackets etc.
+      #str_subset() - like detect, returns only those strings that contain pattern
+        #str_extract() - returns vector of same length as input
+          #But with only the parts of the strings that matched the pattern
+      #str_count() - returns number of times pattern occurred in each string
+        #Answers "How many times does the pattern occur in each string"
+#str_split: useful for splitting string into 2 characters 
+  #output is list with vector of strings, 1 element for each part that was split
+  #will split into how many pieces as possible, based on how many times pattern occurs
+  #n argument will specify how many elements
+  #str_split returns a list, since elements can be a different length
+    #if specify n, can create matrix by specifying argument: simplify = TRUE
+    #can combine with lapply to conduct some function on each list
+  #str_replace() replaces a pattern in input strings with specified replacement string
+    #str_replace(x, pattern = "y", replacement = "z"
+
