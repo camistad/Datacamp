@@ -134,7 +134,7 @@
   #regex provides some shortcuts for specifying things
   #e.g. specify range with - such as char_class("0-9") or char_class("a-z")
   #DGT in rebus or \d in regex is equivalent to char_class("0-9")
-  #WRD in rebus or \w in regex is equivalent to char_class("a-zA-z0-9_")
+  #WRD in rebus or \w in regex is equivalent to char_class("a-zA-Z0-9_")
     #aka. any lower or upper case letter, digit, or underscore
   #SPC in rebus or \s is equivalent to a whitespace character (space, tab, newline)
 #Capturing
@@ -184,9 +184,33 @@
     #ANY_CHAR will only take the first code point
     #when many code points, use GRAPHEME rather than ANY_CHAR
 #A case study, reading a play
-  
+  #Task: read the play and count the number of lines each character has
+  #readlines() - baseline function - reads in text file with no specific structure
+    #result is a vector of strings with each element as a line in file
+  #useful to know which element has a match
+    #done by combining which & str_detect 
+  #stri_isempty(): returns a logical you can use to subset non-empty strings
+    #empty <- stri_isempty(play_text)
+    #play_lines <- play_text[!empty]
+  #or1() function from rebus package: specifies alternatives but rather than 
+    #each alternative being an argument like in or(), you can pass in a vector
+    #of alternatives
+#A case study on case
+  #regex are case sensitive - e.g. "dog" does not match "Dog"
+    #can fix by:
+      #1) transforming input strings to a uniform case
+        #str_to_lower() function brings all to lower case
+        #whole_word() will only match if it occurs as word on its own
+        #str_to_upper() function brings all to upper case
+      #2) altering match so it's done in case insensitive way
+        #regex() function in stringr
+          #can wrap pattern in regex() and specify argument: ignore_case = TRUE
+        #str_to_title() - transforms every word to title case, so every word
+          #starts with a capital letter
+        #stri_trans_totitle() - allows specification of type (default = "word")
+          #but can also be "sentence" to give sentence case
       
-  
+      
     
   
   
