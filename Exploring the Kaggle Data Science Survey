@@ -1,0 +1,249 @@
+1. Welcome to the world of data science
+Throughout the world of data science, there are many languages and tools that can be used to complete a given task. While you are often able to use whichever tool you prefer, it is often important for analysts to work with similar platforms so that they can share their code with one another. Learning what professionals in the data science industry use while at work can help you gain a better understanding of things that you may be asked to do in the future.
+
+In this project, we are going to find out what tools and languages professionals use in their day-to-day work. Our data comes from the Kaggle Data Science Survey which includes responses from over 10,000 people that write code to analyze data in their daily work.
+
+
+# Loading necessary packages
+library(tidyverse)
+# Loading the data
+responses <- read_csv("datasets/kagglesurvey.csv")
+​
+# Printing the first 10 rows
+head(responses, n = 10)
+Parsed with column specification:
+cols(
+  Respondent = col_integer(),
+  WorkToolsSelect = col_character(),
+  LanguageRecommendationSelect = col_character(),
+  EmployerIndustry = col_character(),
+  WorkAlgorithmsSelect = col_character()
+)
+Respondent	WorkToolsSelect	LanguageRecommendationSelect	EmployerIndustry	WorkAlgorithmsSelect
+1	Amazon Web services,Oracle Data Mining/ Oracle R Enterprise,Perl	F#	Internet-based	Neural Networks,Random Forests,RNNs
+2	Amazon Machine Learning,Amazon Web services,Cloudera,Hadoop/Hive/Pig,Impala,Java,Mathematica,MATLAB/Octave,Microsoft Excel Data Mining,Microsoft SQL Server Data Mining,NoSQL,Python,R,SAS Base,SAS JMP,SQL,Tableau	Python	Mix of fields	Bayesian Techniques,Decision Trees,Random Forests,Regression/Logistic Regression
+3	C/C++,Jupyter notebooks,MATLAB/Octave,Python,R,TensorFlow	Python	Technology	Bayesian Techniques,CNNs,Ensemble Methods,Neural Networks,Regression/Logistic Regression,SVMs
+4	Jupyter notebooks,Python,SQL,TensorFlow	Python	Academic	Bayesian Techniques,CNNs,Decision Trees,Gradient Boosted Machines,Neural Networks,Random Forests,Regression/Logistic Regression
+5	C/C++,Cloudera,Hadoop/Hive/Pig,Java,NoSQL,R,Unix shell / awk	R	Government	NA
+6	SQL	Python	Non-profit	NA
+7	Jupyter notebooks,NoSQL,Python,R,SQL,Unix shell / awk	Python	Internet-based	CNNs,Decision Trees,Gradient Boosted Machines,Random Forests,Regression/Logistic Regression,SVMs
+8	Python,Spark / MLlib,Tableau,TensorFlow,Other	Python	Mix of fields	Bayesian Techniques,CNNs,HMMs,Neural Networks,Random Forests,Regression/Logistic Regression,SVMs
+9	Jupyter notebooks,MATLAB/Octave,Python,SAS Base,SQL	Python	Financial	Ensemble Methods,Gradient Boosted Machines
+10	C/C++,IBM Cognos,MATLAB/Octave,Microsoft Excel Data Mining,Microsoft R Server (Formerly Revolution Analytics),Microsoft SQL Server Data Mining,Perl,Python,R,SQL,Unix shell / awk	R	Technology	Bayesian Techniques,Regression/Logistic Regression
+2. Using multiple tools
+Now that we've loaded in the survey results, we want to focus on the tools and languages that the survey respondents use at work.
+
+
+# Printing the first respondents' tools and languages
+responses[1, 2]
+# Creating a new data frame called tools
+tools <- responses
+​
+# Adding a new column to tools which splits the WorkToolsSelect column at the commas and unnests the new column
+tools <- tools  %>% 
+    mutate(work_tools = strsplit(WorkToolsSelect, ",")) %>%
+           unnest()
+​
+# Viewing the first 6 rows of tools
+head(tools, n = 6)
+WorkToolsSelect
+Amazon Web services,Oracle Data Mining/ Oracle R Enterprise,Perl
+Respondent	WorkToolsSelect	LanguageRecommendationSelect	EmployerIndustry	WorkAlgorithmsSelect	work_tools
+1	Amazon Web services,Oracle Data Mining/ Oracle R Enterprise,Perl	F#	Internet-based	Neural Networks,Random Forests,RNNs	Amazon Web services
+1	Amazon Web services,Oracle Data Mining/ Oracle R Enterprise,Perl	F#	Internet-based	Neural Networks,Random Forests,RNNs	Oracle Data Mining/ Oracle R Enterprise
+1	Amazon Web services,Oracle Data Mining/ Oracle R Enterprise,Perl	F#	Internet-based	Neural Networks,Random Forests,RNNs	Perl
+2	Amazon Machine Learning,Amazon Web services,Cloudera,Hadoop/Hive/Pig,Impala,Java,Mathematica,MATLAB/Octave,Microsoft Excel Data Mining,Microsoft SQL Server Data Mining,NoSQL,Python,R,SAS Base,SAS JMP,SQL,Tableau	Python	Mix of fields	Bayesian Techniques,Decision Trees,Random Forests,Regression/Logistic Regression	Amazon Machine Learning
+2	Amazon Machine Learning,Amazon Web services,Cloudera,Hadoop/Hive/Pig,Impala,Java,Mathematica,MATLAB/Octave,Microsoft Excel Data Mining,Microsoft SQL Server Data Mining,NoSQL,Python,R,SAS Base,SAS JMP,SQL,Tableau	Python	Mix of fields	Bayesian Techniques,Decision Trees,Random Forests,Regression/Logistic Regression	Amazon Web services
+2	Amazon Machine Learning,Amazon Web services,Cloudera,Hadoop/Hive/Pig,Impala,Java,Mathematica,MATLAB/Octave,Microsoft Excel Data Mining,Microsoft SQL Server Data Mining,NoSQL,Python,R,SAS Base,SAS JMP,SQL,Tableau	Python	Mix of fields	Bayesian Techniques,Decision Trees,Random Forests,Regression/Logistic Regression	Cloudera
+3. Counting users of each tool
+Now that we've split apart all of the tools used by each respondent, we can figure out which tools are the most popular.
+
+
+# Creating a new data frame
+tool_count <- tools
+​
+# Grouping the data by work_tools, calculate the number of responses in each group
+tool_count <- tool_count  %>% 
+    group_by(work_tools)  %>% 
+    summarise(count = n())
+​
+# Sorting tool_count so that the most popular tools are at the top
+tool_count <- tool_count %>%
+arrange(desc(count))
+    # Printing the first 6 results
+head(tool_count, n = 6)
+work_tools	count
+Python	6073
+R	4708
+SQL	4261
+Jupyter notebooks	3206
+TensorFlow	2256
+NA	2198
+4. Plotting the most popular tools
+Let's see how your favorite tools stack up against the rest.
+
+
+# Creating a bar chart of the work_tools column. 
+# Arranging the bars so that the tallest are on the far right
+ggplot(tool_count, aes(x = reorder(work_tools, count), y = count)) +
+    geom_bar(stat = "identity") +
+​
+# Rotating the bar labels 90 degrees
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+
+5. The R vs Python debate
+Within the field of data science, there is a lot of debate among professionals about whether R or Python should reign supreme. You can see from our last figure that R and Python are the two most commonly used languages, but it's possible that many respondents use both R and Python. Let's take a look at how many people use R, Python, and both tools.
+
+
+# Creating a new data frame called debate_tools
+debate_tools <- responses
+​
+# Creating a new column called language preference, based on the conditions specified in the Instructions
+debate_tools <- debate_tools  %>% 
+  mutate(language_preference = case_when(
+    grepl(pattern = "^.*,R,.$|^R$|^R,.*$|^.*,R", WorkToolsSelect) & !grepl(pattern = "Python", WorkToolsSelect) ~ "R",
+    !grepl(pattern = "^.*,R,.$|^R$|^R,.*$|^.*,R", WorkToolsSelect) & grepl(pattern = "Python", WorkToolsSelect) ~ "Python",
+    !grepl(pattern = "^.*,R,.$|^R$|^R,.*$|^.*,R", WorkToolsSelect) & !grepl(pattern = "Python", WorkToolsSelect) ~ "neither",
+    grepl(pattern = "^.*,R,.$|^R$|^R,.*$|^.*,R", WorkToolsSelect) & grepl(pattern = "Python", WorkToolsSelect) ~ "both"))
+​
+​
+# Printing the first 6 rows
+head(debate_tools, n = 500)
+# .... YOUR CODE FOR TASK 5 ....
+Respondent	WorkToolsSelect	LanguageRecommendationSelect	EmployerIndustry	WorkAlgorithmsSelect	language_preference
+1	Amazon Web services,Oracle Data Mining/ Oracle R Enterprise,Perl	F#	Internet-based	Neural Networks,Random Forests,RNNs	neither
+2	Amazon Machine Learning,Amazon Web services,Cloudera,Hadoop/Hive/Pig,Impala,Java,Mathematica,MATLAB/Octave,Microsoft Excel Data Mining,Microsoft SQL Server Data Mining,NoSQL,Python,R,SAS Base,SAS JMP,SQL,Tableau	Python	Mix of fields	Bayesian Techniques,Decision Trees,Random Forests,Regression/Logistic Regression	both
+3	C/C++,Jupyter notebooks,MATLAB/Octave,Python,R,TensorFlow	Python	Technology	Bayesian Techniques,CNNs,Ensemble Methods,Neural Networks,Regression/Logistic Regression,SVMs	both
+4	Jupyter notebooks,Python,SQL,TensorFlow	Python	Academic	Bayesian Techniques,CNNs,Decision Trees,Gradient Boosted Machines,Neural Networks,Random Forests,Regression/Logistic Regression	Python
+5	C/C++,Cloudera,Hadoop/Hive/Pig,Java,NoSQL,R,Unix shell / awk	R	Government	NA	R
+6	SQL	Python	Non-profit	NA	neither
+7	Jupyter notebooks,NoSQL,Python,R,SQL,Unix shell / awk	Python	Internet-based	CNNs,Decision Trees,Gradient Boosted Machines,Random Forests,Regression/Logistic Regression,SVMs	both
+8	Python,Spark / MLlib,Tableau,TensorFlow,Other	Python	Mix of fields	Bayesian Techniques,CNNs,HMMs,Neural Networks,Random Forests,Regression/Logistic Regression,SVMs	Python
+9	Jupyter notebooks,MATLAB/Octave,Python,SAS Base,SQL	Python	Financial	Ensemble Methods,Gradient Boosted Machines	Python
+10	C/C++,IBM Cognos,MATLAB/Octave,Microsoft Excel Data Mining,Microsoft R Server (Formerly Revolution Analytics),Microsoft SQL Server Data Mining,Perl,Python,R,SQL,Unix shell / awk	R	Technology	Bayesian Techniques,Regression/Logistic Regression	both
+11	C/C++,Jupyter notebooks,Python,TensorFlow	Python	Academic	CNNs,Neural Networks	Python
+12	MATLAB/Octave,Python	Matlab	Telecommunications	CNNs,Decision Trees,RNNs	Python
+13	C/C++,Java,Jupyter notebooks,MATLAB/Octave,Python,R	Python	Academic	Neural Networks,Regression/Logistic Regression,SVMs	both
+14	Amazon Web services,Java,Jupyter notebooks,MATLAB/Octave,Microsoft Excel Data Mining,SAS Enterprise Miner,Spark / MLlib	Matlab	Other	SVMs	neither
+15	Hadoop/Hive/Pig,Java,Jupyter notebooks,NoSQL,Python,R,Spark / MLlib,SQL	Python	Mix of fields	Decision Trees,Ensemble Methods,Random Forests,Regression/Logistic Regression	both
+16	IBM Cognos,NoSQL,Unix shell / awk	R	Pharmaceutical	Evolutionary Approaches	neither
+17	Cloudera,Flume,Hadoop/Hive/Pig,Impala,Java,Jupyter notebooks,KNIME (free version),NoSQL,Python,R,SAS Enterprise Miner,Spark / MLlib,SQL	Python	Financial	Decision Trees,Ensemble Methods,Gradient Boosted Machines,Random Forests	both
+18	C/C++,Cloudera,Hadoop/Hive/Pig,Impala,Jupyter notebooks,NoSQL,Python,R,Spark / MLlib,Unix shell / awk,Other	Python	Internet-based	Decision Trees,Ensemble Methods,Neural Networks,Random Forests,Regression/Logistic Regression,RNNs,Other	both
+19	Python,R,SQL	Python	Technology	Bayesian Techniques,Decision Trees,Neural Networks,Regression/Logistic Regression	both
+20	NoSQL,Perl,Python,Other	Python	Pharmaceutical	HMMs	Python
+21	MATLAB/Octave,Python,R,Unix shell / awk,Other	Python	Financial	Ensemble Methods,Gradient Boosted Machines,Random Forests,Regression/Logistic Regression,SVMs	both
+22	C/C++,Jupyter notebooks,Python,TensorFlow,Unix shell / awk	Python	Military/Security	Decision Trees,RNNs,SVMs	Python
+23	MATLAB/Octave,Python,R,SAS JMP,SQL,TIBCO Spotfire	Python	Technology	Regression/Logistic Regression	both
+24	C/C++,Jupyter notebooks,MATLAB/Octave,Python,TensorFlow	Python	Technology	CNNs,Decision Trees,Ensemble Methods,Gradient Boosted Machines,Neural Networks,Random Forests,SVMs	Python
+25	NA	Python	Financial	NA	neither
+26	Python	NA	Technology	NA	Python
+27	Amazon Web services,Hadoop/Hive/Pig,Julia,Jupyter notebooks,R,SAS Base,SAS Enterprise Miner,SQL,Unix shell / awk	Python	CRM/Marketing	Decision Trees,Ensemble Methods,Gradient Boosted Machines,Random Forests,Regression/Logistic Regression	R
+28	Amazon Web services,Python,R,SAP BusinessObjects Predictive Analytics,Unix shell / awk	Python	Technology	Bayesian Techniques,Ensemble Methods,Gradient Boosted Machines,RNNs	both
+29	Jupyter notebooks,Python,R,SQL	R	Financial	Decision Trees,Ensemble Methods,Random Forests,Regression/Logistic Regression,SVMs	both
+30	Julia,Jupyter notebooks,Python,R,SQL,TensorFlow	Python	Technology	Regression/Logistic Regression	both
+...	...	...	...	...	...
+471	Hadoop/Hive/Pig,IBM Watson / Waton Analytics,Jupyter notebooks,NoSQL,Python,R,Spark / MLlib	NA	Mix of fields	Bayesian Techniques,Markov Logic Networks,Neural Networks,Regression/Logistic Regression	both
+472	Python,R	R	Technology	Neural Networks,SVMs	both
+473	Amazon Web services,Jupyter notebooks,Python,SQL,Other	Python	Hospitality/Entertainment/Sports	Decision Trees,Random Forests,Regression/Logistic Regression	Python
+474	MATLAB/Octave,Python,TensorFlow	Python	Technology	SVMs	Python
+475	Amazon Web services,Python,R,Spark / MLlib,SQL,Tableau,TensorFlow,Other,Other	Python	Insurance	Bayesian Techniques,Decision Trees,Ensemble Methods,Neural Networks,Random Forests,Regression/Logistic Regression,SVMs	both
+476	Amazon Web services,Jupyter notebooks,Python,SQL,Unix shell / awk	Python	Retail	Other	Python
+477	Python,R,Tableau,TensorFlow	Python	Technology	GANs,Neural Networks,RNNs,SVMs	both
+478	NoSQL,Python,Spark / MLlib,TensorFlow	Python	Internet-based	Neural Networks	Python
+479	Amazon Web services,C/C++,Cloudera,Hadoop/Hive/Pig,Java,Jupyter notebooks,MATLAB/Octave,NoSQL,Python,R,Spark / MLlib,SQL,Tableau,TensorFlow,Unix shell / awk	Python	Technology	Other	both
+480	Java,Jupyter notebooks,Mathematica,Python,R,SQL	Python	Technology	Regression/Logistic Regression	both
+481	Python,SQL,Other	Python	Financial	Decision Trees,Ensemble Methods,Neural Networks,Random Forests,Regression/Logistic Regression	Python
+482	Cloudera,Hadoop/Hive/Pig,Jupyter notebooks,NoSQL,Python,R,Spark / MLlib,SQL,Stan,Tableau,Unix shell / awk	Python	Insurance	Bayesian Techniques,Decision Trees,Ensemble Methods,Gradient Boosted Machines,Random Forests	both
+483	SAS Base,SAS Enterprise Miner	SAS	Government	Neural Networks	neither
+484	Microsoft Excel Data Mining,Microsoft SQL Server Data Mining,Minitab,R	R	Telecommunications	Decision Trees,Gradient Boosted Machines,Markov Logic Networks,Random Forests,Regression/Logistic Regression	R
+485	R,RapidMiner (commercial version),SQL,Tableau	R	Manufacturing	Decision Trees,Neural Networks,Regression/Logistic Regression	R
+486	Amazon Web services,KNIME (free version),Python,R,RapidMiner (commercial version),Tableau	Python	Other	Bayesian Techniques,Regression/Logistic Regression,SVMs	both
+487	Hadoop/Hive/Pig,Jupyter notebooks,Python	Python	Hospitality/Entertainment/Sports	Decision Trees,Ensemble Methods,Gradient Boosted Machines,Random Forests,Regression/Logistic Regression	Python
+488	Jupyter notebooks,KNIME (free version),Python,R,SQL,Tableau	Python	Mix of fields	Gradient Boosted Machines,Random Forests,Regression/Logistic Regression	both
+489	Amazon Web services,Jupyter notebooks,KNIME (free version),Microsoft Excel Data Mining,Python,R,RapidMiner (free version),TensorFlow	R	Mix of fields	Bayesian Techniques,Neural Networks,Regression/Logistic Regression,RNNs	both
+490	Google Cloud Compute,Jupyter notebooks,Python,TensorFlow	R	Technology	Decision Trees,Neural Networks,Random Forests,Regression/Logistic Regression,RNNs	Python
+491	R,Tableau	R	Other	Decision Trees,Neural Networks,Random Forests,Regression/Logistic Regression	R
+492	Python,SQL	Python	Internet-based	Bayesian Techniques,Decision Trees,Random Forests,Regression/Logistic Regression,SVMs	Python
+493	Amazon Web services,C/C++,Python	Python	Telecommunications	NA	Python
+494	Python,TensorFlow	Python	Academic	CNNs	Python
+495	Amazon Web services,Hadoop/Hive/Pig,NoSQL,Python,R,SQL,Unix shell / awk	SQL	Technology	Bayesian Techniques,Decision Trees,HMMs,Other	both
+496	Amazon Web services,C/C++,Java,Jupyter notebooks,Python,SQL,TensorFlow	Python	Academic	Bayesian Techniques,CNNs,Decision Trees,Ensemble Methods,Neural Networks,Random Forests,Regression/Logistic Regression,RNNs,SVMs	Python
+497	Amazon Web services,C/C++,Julia,Jupyter notebooks,MATLAB/Octave,Python,SQL,TensorFlow	Python	Mix of fields	NA	Python
+498	Java,R	R	Academic	CNNs,Decision Trees,HMMs,Neural Networks,Random Forests	R
+499	Microsoft Azure Machine Learning,Microsoft R Server (Formerly Revolution Analytics),Python,R,TensorFlow	Python	Technology	Bayesian Techniques,Decision Trees,Neural Networks	both
+500	Amazon Machine Learning,Jupyter notebooks,Microsoft R Server (Formerly Revolution Analytics),Orange,Python,R,SQL,Tableau	R	Financial	Decision Trees,Ensemble Methods,Random Forests,Regression/Logistic Regression,SVMs	both
+6. Plotting R vs Python users
+Now we just need to take a closer look at how many respondents use R, Python, and both!
+
+
+# Creating a new data frame
+debate_plot <- debate_tools
+​
+# Grouping by language preference and calculate number of responses
+debate_plot <- debate_plot  %>% 
+   group_by(language_preference)  %>% 
+    summarise(count = n())  %>% 
+​
+# Removing the row for users of "neither"
+    filter(language_preference != "neither")
+​
+# Creating a bar chart
+ggplot(debate_plot, aes(reorder(x = language_preference,count), y = count)) + geom_bar(stat = "identity")
+# .... YOUR CODE FOR TASK 6 ....
+​
+
+7. Language recommendations
+It looks like the largest group of professionals program in both Python and R. But what happens when they are asked which language they recommend to new learners? Do R lovers always recommend R?
+
+
+5
+# Creating a new data frame
+recommendations <- debate_tools
+​
+# Grouping by language_preference and then LanguageRecommendationSelect
+recommendations <- recommendations  %>% 
+    group_by(language_preference, LanguageRecommendationSelect)  %>% 
+    summarise(count = n()) %>%
+    filter(!is.na(LanguageRecommendationSelect)) %>%
+    arrange(desc(language_preference), desc(count)) %>%
+    mutate(row = row_number(desc(count))) %>%
+    filter(row < 5)
+recommendations
+​
+# Removing empty responses and include the top recommendations
+​
+# .... YOUR CODE FOR TASK 7 ....
+language_preference	LanguageRecommendationSelect	count	row
+neither	Python	201	1
+neither	R	98	2
+neither	SQL	62	3
+neither	Matlab	47	4
+both	Python	1881	1
+both	R	909	2
+both	SQL	106	3
+both	C/C++/C#	27	4
+R	R	628	1
+R	Python	189	2
+R	SQL	66	3
+R	C/C++/C#	24	4
+Python	Python	1778	1
+Python	C/C++/C#	48	2
+Python	Matlab	43	3
+Python	SQL	38	4
+8. The most recommended language by the language used
+Just one thing left. Let's graphically determine which languages are most recommended based on the language that a person uses.
+
+
+geRecommendationSelect, y = count
+# Creating a faceted bar plot
+ggplot(recommendations, aes(x=LanguageRecommendationSelect, y = count)) + 
+geom_bar(stat = "identity") +
+facet_wrap(~language_preference)
+
+9. The moral of the story
+So we've made it to the end. We've found that Python is the most popular language used among Kaggle data scientists, but R users aren't far behind. And while Python users may highly recommend that new learners learn Python, would R users find the following statement TRUE or FALSE?
+
+
+TRUE
+# Would R users find this statement TRUE or FALSE?
+R_is_number_one = TRUE
