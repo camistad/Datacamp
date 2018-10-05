@@ -1,0 +1,17 @@
+#Introduction to HR Analytics
+  #using data about a company's workforce to create value
+  #e.g. people analytics, workforce analytics, talent analytics
+  #Data-driven approach to managing people at work
+#A general 3-step process for HR analytics 
+  #1. Identify the groups to compare
+    #many q's in HR analytics is about why 1 group different from other
+  #2. Calculate summary statistics about those groups
+    #E.g. mean, median, sum (total number sick days, max overtime, etc. 
+  #3. Plot or test differences between groups
+    #compare the differences statistically or visually
+#Course Overview - Minitiature case studies
+  #1: identifying the best recruiting source
+  #2: What is driving low employee engagement
+  #3: Are new hires getting paid too much?
+  #4: Are performance ratings being given consistently?
+  #5: Improving employee safety with data
