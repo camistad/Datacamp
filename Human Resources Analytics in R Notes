@@ -15,3 +15,85 @@
   #3: Are new hires getting paid too much?
   #4: Are performance ratings being given consistently?
   #5: Improving employee safety with data
+#Recruiting and quality of hire
+  #Q's: Where are your best hires coming from & where can you get more of them?
+  #Applying the process to recruiting
+    #Employees hired from different recruiting channels
+    #Statistic = average quality of hire
+      #can use metrics like retention, hiring manager satisfaction, job perf, time to productivity
+  #Calculating the attrition rate: attrition / headcount
+    #attrition = # of people who left company vs headcount = # of people in company
+    #when attrition = 1 if employee leaves, can take mean(attrition) as attrition rate
+  #sample code through dplyr:
+  #   recruitment %>%
+  #  + group_by(recruiting_source) %>%
+  #  + summarize(highest_performance = max(performance_rating)) %>%
+  #  + arrange(highest_performance)
+  #note new function count(): returns number of rows corresponding to each member of specified group
+    #if group not specified returns total number of rows in data
+#Visualizing the Recruiting Data
+  #Need to communicate results of data analysis effectively
+  #Plot differences found between groups
+  #Assign variables to aesthetics
+    #use geom_col, like geom_bar, but uses identity as statistic, rather than count
+      #therefore displaying bar chart with 1 bar for each value of x, y aesthetic = height of bar
+#Analyzing employee engagement
+  #Engagement has many definitions
+  #Working definition: Those who are involved in, enthusiastic about, and committed to work and workplace
+  #Working with employee enegagement data where 5 = most engaged, 1 = least engaged
+  #will be using ifelse() + mutate() together
+    #as ifelse() can test vectors, it can be used inside a mutate call
+    survey %>%
+    + mutate(takes_vacation = ifelse(vacation_days_taken > 10, "Yes", "No"))
+    #doing so, gives different output in each cell of vector
+  #multiple summarizes
+    #can look at different summary statistics by adding comma in summarize
+      survey %>% 
+      + group_by(department) %>%
+      + summarize(max_salary = max(salary),
+                  min_salary = min(salary),
+                  avg_salary = mean(salary))
+  #Visualizing the engagement data
+    #possible to give multiple visuals at once (e.g. facet_wrap)
+    #allows plotting multiple attributes at one place
+    #need to have data in tidy format
+      #e.g. tidyr package - to arrange data
+        #gather() function - to collect (gather) column headings into a single column 
+          #and bring corresponding data along with them to adjacent column
+         data %>% 
+          gather(columns,
+            key = "key", value = "value")
+        #where columns = all the columns with numerical values that you want gathered    
+        #where key = resulting column of headings
+        #where value = column of data values
+        #Useful when you have a single numeric column and multiple categorical columns
+        survey_gathered <- survey_summary %>%
+        + gather(average_engagement, average_promotions,
+        +  key = "key", value = "value")
+        ggplot(survey_gathered, aes(key, value, fill = department)) + 
+        + geom_col()
+          #fill breaks up each bar into different colors by department
+        + geom_col(position="dodge")
+          #if you instead add position = "dodge" department columns are side by side
+        #adding facets
+          #when metrics have vastly different numbers, use facet_wrap
+          ggplot(survey_gathered, aes(x = key, y = value, fill = department)) + 
+          + geom_col(position = "dodge") +
+          + facet_wrap(~ key, scales = "free")
+            #Where scales = "free" lets each facet's axes have their own scales
+  #Testing differences between groups
+    #say you have 2 samples of people with differences on a metric
+    #statistical test uses sample 1 to estimate average height for a population
+    #p-value: likelihood that second sample came from same population as first sample
+    #if p-value less than a predetermined level (e.g. .05) can be reasonably sure diff pops
+    #significant = "two groups not samples from same population"
+    #two tests: t-test & chi square test
+      #both used to compare diffs between two groups
+      #t-test: when attribute to compare is continuous (e.g. salary, tenure)
+        t.test(y ~ x, data = df)
+      #chi-square: when attribute to compare is categorical (e.g. high performer)
+        #can use to compare group comp, e.g. if 1 group has higher proportion of high perfs/ turnover
+        chisq.test(y, x)
+          #note, no data argument in chisq.test, so must specify df in y & x
+#
+        
