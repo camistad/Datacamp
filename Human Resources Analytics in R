@@ -128,3 +128,294 @@ t.test(vacation_days_taken ~ in_sales, data = survey_sales)
 
 # Is the result significant?
 significant <- TRUE
+
+######
+# Load the packages
+library(dplyr)
+library(readr)
+
+# Import the data
+pay <- read_csv("fair_pay_data.csv")
+
+# Get an overview of the data
+summary(pay)
+
+# Check average salary of new hires and non-new hires
+pay %>% 
+  group_by(new_hire) %>%
+  summarize(avg_salary = mean(salary))
+  
+######
+# Perform the correct statistical test
+t.test(salary ~ new_hire, data = pay)
+
+# Do the same test, and tidy up the output
+library(broom)
+t.test(salary ~ new_hire, data = pay) %>%
+  tidy()
+
+# Is the result significant?
+significant <- TRUE
+
+######
+# Load package
+library(ggplot2)
+
+# Create a stacked bar chart
+ggplot(pay, aes(x = new_hire, fill = job_level)) + 
+geom_bar()
+
+# Create a 100% filled stacked bar chart
+ggplot(pay, aes(x = new_hire, fill = job_level)) + 
+geom_bar(position = "fill")
+
+# Calculate the average salary for each group of interest
+pay_grouped <- pay %>% 
+  group_by(new_hire, job_level) %>% 
+  summarize(avg_salary = mean(salary))
+  
+# Graph the results using facet_wrap()  
+pay_grouped %>%
+  ggplot(aes(x= new_hire, y = avg_salary)) + geom_col() + facet_wrap(~ job_level)
+
+########
+# Load the package
+library(broom)
+
+# Filter the data to include only hourly employees
+pay_filter <- pay %>%
+filter(job_level == "Hourly")
+
+# Test the difference in pay
+t.test(salary ~ new_hire, data = pay_filter) %>%
+tidy()
+
+# Is the result significant?
+significant <- FALSE
+#######
+# Run the simple regression
+model_simple <- lm(salary ~ new_hire, data = pay)
+
+# Display the summary of model_simple
+model_simple %>% 
+  summary()
+  
+# Display a tidy summary
+model_simple %>% 
+ tidy()
+   
+# Is new hire pay significantly higher in this model?
+significant <- TRUE
+
+####
+# Run the multiple regression
+model_multiple <- lm(salary ~ new_hire + job_level, data = pay)
+
+# Display the summary of model_multiple
+model_multiple %>% 
+  summary()
+
+# Display a tidy summary
+model_multiple %>% 
+  tidy()
+
+# Is new hire pay significantly higher in this model?
+significant <- FALSE
+
+########
+# Load the packages
+library(dplyr)
+library(readr)
+
+# Import the data
+hr_data <- read_csv("hr_data.csv")
+performance_data <- read_csv("performance_data.csv")
+
+# Examine the datasets
+summary(hr_data)
+summary(performance_data)
+
+######
+# Join the two tables
+joined_data <- left_join(hr_data, performance_data, by = "employee_id")
+
+# Examine the result
+summary(joined_data)
+
+# Check whether the average performance rating differs by gender 
+joined_data %>%
+group_by(gender) %>%
+summarize(avg_rating = mean(rating))
+######
+
+# Add the high_performer column
+performance <- joined_data %>%  
+  mutate(high_performer = ifelse(rating >= 4, 1, 0))
+
+# Test whether one gender is more likely to be a high performer
+chisq.test(performance$gender, performance$high_performer)   
+ 
+# Do the same test, and tidy the output
+library(broom)
+chisq.test(performance$gender, performance$high_performer) %>% 
+  tidy()
+
+# Is the test result significant?
+significant <- TRUE
+
+#####
+# Visualize the distribution of high_performer by gender
+ggplot(performance, aes(x = gender, fill = factor(high_performer))) + geom_bar(position = "fill")  
+
+#####
+# Visualize the distribution of all ratings by gender
+ggplot(performance, aes(x = gender, fill = factor(rating))) + geom_bar(position = "fill")
+
+# Visualize the distribution of job_level by gender
+performance %>%
+  ggplot(aes(x = gender, fill = job_level)) +
+  geom_bar(position = "fill")
+ 
+# Test whether men and women have different job level distributions
+chisq.test(performance$gender, performance$job_level)
+
+#####
+# Visualize the distribution of job_level by gender
+performance %>%
+  ggplot(aes(x = gender, fill = job_level)) +
+  geom_bar(position = "fill")
+ 
+# Test whether men and women have different job level distributions
+chisq.test(performance$gender, performance$job_level) 
+
+# Visualize the distribution of high_performer by gender, faceted by job level
+performance %>% 
+  ggplot(aes(x = high_performer, fill = gender)) + geom_bar(position = "fill") +  facet_wrap(~ job_level)
+#######
+# Run a simple logistic regression
+logistic_simple <- glm(high_performer ~ gender, family = "binomial", data = performance) 
+
+# View the result with summary()
+logistic_simple %>%
+  summary()
+
+# View a tidy version of the result
+logistic_simple %>%
+  tidy()
+
+# Is the result significant?
+significant <- TRUE
+#######
+# Run a multiple logistic regression
+logistic_multiple <- glm(high_performer ~ gender + job_level, family = "binomial", data = performance)
+
+# View the result with summary() or tidy()
+logistic_multiple %>%
+  tidy()
+
+# Is the result significant?  
+significant <- TRUE
+#########
+# Load the packages
+library(readr)
+library(dplyr)
+
+# Import the data 
+hr_data <- read_csv("hr_data_2.csv")
+accident_data <- read_csv("accident_data.csv")
+
+# Create hr_joined with left_join() and mutate()
+hr_joined <- left_join(hr_data, accident_data, by = c("employee_id", "year")) %>% 
+  mutate(had_accident = ifelse(is.na(accident_type), 0, 1))
+  
+hr_joined
+#######
+# Find accident rate for each year
+hr_joined %>% 
+  group_by(year) %>% 
+  summarize(accident_rate = mean(had_accident))
+
+# Test difference in accident rate between years
+chisq.test(hr_joined$year, hr_joined$had_accident)
+
+# Which location had the highest acccident rate?
+hr_joined%>%
+group_by(location) %>%
+summarize(accident_rate = mean(had_accident)) %>%
+arrange(desc(accident_rate))
+
+#####
+# Compare annual accident rates by location
+accident_rates <- hr_joined %>% 
+  group_by(location, year) %>% 
+  summarize(accident_rate = mean(had_accident))
+  
+accident_rates
+
+# Graph it
+accident_rates %>% 
+  ggplot(aes(factor(year), accident_rate)) +
+  geom_col() +
+  facet_wrap(~location)
+
+# Answer the question
+increased_most <- "Southfield"
+######
+# Filter out the other locations
+southfield <- hr_joined %>% 
+  filter(location == "Southfield")
+
+# Find the average overtime hours worked by year
+southfield %>%
+  group_by(year) %>% 
+  summarize(average_overtime_hours = mean(overtime_hours))
+
+# Test difference in Southfield's overtime hours between years
+t.test(overtime_hours ~ year, data = southfield) 
+
+# Do the years have significantly different average overtime hours?  
+significant <- FALSE
+######
+# Import the survey data
+survey_data <- read_csv("survey_data_2.csv")
+
+# Create the safety dataset
+safety <- left_join(hr_joined, survey_data, by = c("year","employee_id")) %>%
+mutate(disengaged = ifelse(engagement <3, 1, 0), year = factor(year))
+#####
+# Visualize the difference in % disengaged by year in Southfield
+southfield %>% 
+  ggplot(aes(x = year, fill = factor(disengaged))) +
+  geom_bar(position = "fill")
+ 
+# Test whether one year had significantly more disengaged employees
+chisq.test(southfield$year, southfield$disengaged)
+
+# Is the result significant?
+significant <- TRUE
+######
+# Filter out Southfield
+other_locs <- safety %>% 
+  filter(location != "Southfield")
+
+# Test whether one year had significantly more overtime hours worked
+t.test(overtime_hours ~ year, data = other_locs) 
+
+# Test whether one year had significantly more disengaged employees
+chisq.test(other_locs$year, other_locs$disengaged)
+
+# Are the results significant?
+significant_overtime <- FALSE
+significant_disengaged <- FALSE
+#####
+# Use multiple regression to test the impact of year and disengaged on accident rate in Southfield
+regression <- glm(had_accident ~ year + disengaged, family = "binomial", data = southfield)
+
+# Examine the output
+library(broom)
+tidy(regression)
+
+# Interpret the regression output
+significant_year <- FALSE
+significant_disengaged <- TRUE
+####
