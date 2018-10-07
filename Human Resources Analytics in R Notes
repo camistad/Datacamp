@@ -89,11 +89,129 @@
     #significant = "two groups not samples from same population"
     #two tests: t-test & chi square test
       #both used to compare diffs between two groups
-      #t-test: when attribute to compare is continuous (e.g. salary, tenure)
+      #t-test: when attribute to compare (DV) is continuous (e.g. salary, tenure) & IV is dichotomous
         t.test(y ~ x, data = df)
-      #chi-square: when attribute to compare is categorical (e.g. high performer)
+      #chi-square: when attribute to compare (DV) is categorical (e.g. high performer) & iv is dichotomous
         #can use to compare group comp, e.g. if 1 group has higher proportion of high perfs/ turnover
         chisq.test(y, x)
           #note, no data argument in chisq.test, so must specify df in y & x
-#
-        
+#Paying new hires fairly
+  #Can increase salary to increase chances of hiring for a difficult to obtain position
+  #But can affect current incumbent salaries in that may be higher than average incumbent
+  #If incumbents find out, may leave, be resentful, file lawsuit if assumed due to discrimination
+  #Important to do routine checks of both current employee and new hire salaries
+  #Usually done by compensation professionals that incorporate market forces, job classifications, etc.
+  #Goal: identify difference in salary between 2 groups: new hrie and current
+  #Will use broom::tidy(); tidy takes messy output of a statistical test (e.g. t-test)
+    #returns output in a nicely formatted dataframe (useful when original ouptut is  alist
+    chisq.test(survey$in_sales, survey$disengaged) %>%
+    +  tidy()
+    #Numbers are teh same but tidy version has column names
+    #helps to access certain values directly to use elsewhere (e.g. p-value)
+  #can use pull() function to output p-value from a tidied statistical test
+    chisq.test(survey$in_sales, survey$disengaged) %>%
+    +  tidy() %>%
+    +  pull()
+#Omitted variable bias
+  #Key assumption when comparing groups is that groups are same except for variable tested
+  #make sure no underlying 3rd variables (aka. confounds) are causing differences
+  #Good way to show this is using graphs
+  #Visualizing group composition
+    #e.g. when showing composition of employee groups based on discrete (categorical) variables
+    #Useful = 100% stacked bar graph
+      #similar to stacked bar chart but y-axis is the same height for both groups
+      #even if groups have different sample size
+      #useful when interested in group composition (what makes up group) rather than actual number
+      pay %>%
+      +  ggplot(aes(x = new_hire, fill = department)) +
+      +  geom_bar(position = "fill")
+      #Note: plot uses geom-bar (vs. geom_col)
+      #geom_bar y-axis = count of observations. geom_bar has height of bar proportional to number cases in each group
+        #uses stat_count: counts number of cases at each x position
+      #geom_col y-axis = values in data. geom_col has height of bar proportional to values in data
+        #uses stat_identity: leaves the data as is
+      #note: geom_bar uses position = "fill" (vs. e.g. "dodge")
+        #fill = ggplot scales bars to be same height and leads to 100% stacked barchart
+#Using Linear Regression
+  #Useful for determining if a meaningful difference exists when taking multiple variables into account
+  #useful for forecasting, optimization, measuring impact of one variable on another
+  #linear regression finds an equation for the lines that best fit a set of data
+  #can use lm function to construct linear models
+    lm(dv ~ iv1 + iv2... + iv#, data=df) %>%
+    +    tidy()
+    lm(salary ~ new-hire, data = pay) %>%
+    +   tidy()
+  #output is as follows:
+    #term: includes the intercept (when all predictors are at 0) & other predictors
+      #note: when one predictor is dichotomous (e.g. new_hire), you'll see the group specified as 1 in the term
+        #e.g. new_hireYes - with intercept row taking place of new_hireNo aka. if new_hire is specified as 0
+        #in this case, current employees have average salary of $73,424 (estimate of interecept)
+        #in this case, new hires have average salary $2649 higher than employees
+    #estimate: aka. coefficient 
+        #values correspond to how much DV will increase/decrease with each 1 unit increase/decrease of that predictor
+        #For intercept row, estimate is the mean value of the dv when all predictors are 0
+    #p-value: states whether predictor is significant
+        #e.g. if predictor is a dichotomous variable, whether average DV of group a 
+        #is significantly different from average DV of group b
+  #note: when you add predictors, the estimates of those are still what happens with 1 unit increase
+    #taking into account the other predictors (aka. when other predictors are constant)
+    #so let's say predictor 1 increases 1 unit, all other predictors stay the same
+    #the estimate value is how much does DV increase/decrease
+  #can replace tidy() with summary() to get a more comprehensive output (comes with significance stars to help interpret)
+  lm(salary ~ new_hire + department, data = pay) %>%
+  +   summary()
+  #also note that you can continue to add predictors to see how estimates change when you take other factors into account
+#Joining HR Data
+  #Basic employee data (e.g. tenure, demographic info) is not stored in same spot often
+  #May need to gather financial data stored in other files (e.g. sql)
+  #can use joins in dplyr e.g. left_join()
+  left_join(df you want to add additional data to, df you want data from, by = "column with identifier")
+  left_join(hr_data, bonus_pay_data, by = "employee_id")
+    #use left_join to add data to a dataframe from one dataframe by a key
+    #note: if your from df doesn't have a key that your to df has, that row is given NA
+    #note: if your to df doesn't have a key that your from df has, that row is dropped
+    #note: safest to use a unique key for each individual (e.g. ID vs. name) that is consistent over time
+  #Fairness
+    #Always potential for conscious (e.g. prejudice) & unconscious bias (e.g. heuristics)
+    #bias can be found in: hiring processes, performance ratings, promotion decisions, anywhere subjective decisions can be made
+  #Using logistic regression
+    #linear regression useful for continuous dv; logistic regression useful for dichotomous dv
+    #logistic fit curves appropriately to be better fit to model
+    #use glm() for logistic regression rather than lm() 
+    glm(high_performer ~ salary, data = hr, family = "binomial") %>% tidy()
+    #glm = generalized linear model; can be used to fit wide variety of models
+    #specify type of model using 'family' argument
+      #logistic: family = "binomial"
+    #multiple logistic regression easy by just appending to predictor
+    glm(high_performer ~ salary + department, data = hr, family = "binomial") %>% tidy()
+    #can check p_value to see if result of test is significant
+    #note: logistic regression coefficients don't have same meaning as linear regression
+      #in logisitic regression: coefficient / estimate is the rate of change in the "log odds" as x changes
+      #not intuitive, so it's better to interpret the odds ratio
+        #odds ratio formula: exponent of the coefficient == probability of event / probability of the nonevent
+        #odds ratio #: a 1-unit change in X (all other predictors constant) would make the event # more likely
+          #e.g. if odds ratio is 2 then 1 unit change in X would make event twice as likely
+          #e.g. if odds ratio is 1 then the chances are always 50/50 that an event will happen, regardless of unit change
+    #can interpret sign of coefficients as significantly more likely vs. significantly less likely
+  #Employee Safety - The final case study
+    #HR should be employee advocate, accidents can lead to increased employee turnover, lawsuits
+    #Identify what is driving increase in workplace accidents
+    #have to join accidents data set with HR data set
+    #in this scenario, multiple years means each row does not have a unique employee id
+    #however, you can add additional keys to make unique rows (here we join by year & employee id)
+    joined_data <- left_join(hr_data, safety_data, by = c("year", "employee_id"))
+    #note that some rows will be missing data, can filter out with is.na() in filter
+    joined_data %>% filter(!is.na(accident_time))
+  #Focusing on the location of interest
+    #Useful to focus on southfield as most change happened here
+    #Look for other variables that also increased significantly at that time
+    #Then compare to where other locations didn't have that same increase
+    #Will need to filter out unwanted data use !=
+     hr_joined %>% 
+     + filter(engagement != 5) %>%
+     count(engagement)
+     #This keeps only the cases where engagement is not 5
+  #Explaining the increase in accidents
+    #Use multiple regression to incorporate multiple predictors
+  
+    
