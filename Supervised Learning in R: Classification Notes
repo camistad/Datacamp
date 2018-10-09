@@ -1,1 +1,30 @@
-
+#Classification with nearest neighbors
+  #Machine learning: utilizes computers to turn data into insight and action
+    #subset of machine learning = supervised learning: training a machine to learn from prior examples
+    #classification: concept to be learned is a set of categories
+      #e.g. identifying diseases, is image a cat, etc.
+  #Classification tasks for driverless cars
+    #e.g. classifying signs, objects in distance
+  #Understanding neartest neighbors
+    #to start training driverless car, would supervise by demonstrating desired behavior
+    #as it observes each sign
+    #after some time under instruction, vehicles builds database recording sign & target behavior
+    #imagine a set of similar images:
+      #a nearest neighbor classifier takes advantage of fact that
+      #signs that look alike should be similar to/nearby other signs of same type
+    #measuring similarity with distance
+      #how nearest neighbor learner decide whether two signs are similar
+      #it doesn't measure distance between signs in physical space - but instead it 
+      #imagines the properties of signs as coordinates in feature space
+      #E.g. consider color - is imagined as 3D feature space, signs of similar color are
+      #located naturally close to one another
+      #then measure distance through geometric formula (e.g. eucledian geometry)
+    #Applying nearest neighbors in R
+      #An algorithm called k nearest neighbors (knn) uses the principal of nearest neighbors
+      #to classify unlabeled examples
+      #R's KNN function searches the dataset for observation most similar to newly observed observation
+    #knn function: in "class" library
+      library(class)
+      pred <- knn(training_data, testing_data, training_labels)
+      #requires 3 parameters: 1) set of training data, 2) test data to be classified, 3) labels for training data 
+  #  
