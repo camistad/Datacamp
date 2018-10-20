@@ -94,5 +94,84 @@
       #this normalize() function can be used to perform min-max normalization
       #rescales any vector x so that its minimum value is zero and max value is one
       #subtracts minimum value from each value of x and divdes by range of x values
-      
-      
+#Understanding Bayesian methods
+  #Some smartphones / apps offer routes & traffic estimates w/o user even asking
+  #phone keeps record of user's past locations
+  #uses data to forecast user's most probable future location
+  #Bayesian methods proposes rules for estimating probabilities in light of historic data
+  #estimating probability
+    #e.g. map tracking # of times attended at 4 different locations
+    #Home = 10, Work = 23, restaurant = 3, store = 4
+    #home predicted at 57.5% or 23/40 times
+    #Probability of A is denoted P(A)
+    #P(work) = 23/40  = 57.5%
+    #P(store) = 4/40 = 10%
+    #Probability = # times event happened / # times could have happened
+    #to be more accurate - must be able to combine information from several events into a single probability estimate
+  #Joint probability and independent events
+    #When events occur together - they have a joint probability
+    #create venn diagrams to determine joint probability
+    #joint probability of two events is computed by finding proportion of observations in which they occurred together
+    #Joint probability of events A and B is denote P(A and B)
+    #P(work and evening) = 1%
+    #P(work and afternoon) = 20%
+  #independent events
+    #when 2 events don't go together
+    #however, many data elements that do occur together
+    #when 1 event is predictive of another, they're called dependent
+  #conditional probability expresses how 1 event depends on another
+    #conditional probability of events A & B is denoted P(A|B)
+    #P(A|B) = P(A and B) / P(B)
+    #Probability of event A given B is equal to their joint probability divided by probability of B
+    #e.g. P(work|evening) asks - what is probability they are at work, given it is the evening?
+      #take probability it is evening, divide by probability of them being at work
+  #Naive Bayes
+    #applies bayesian methods to estimate the conditional probability of an outcome
+    #naivebayes packages
+    library(naivebayes)
+    m <- naive_bayes(location ~ time_of_day, data = location_history)
+    P(A|B) ~~ P(Y|X) ~~ P(outcome | predictor)
+    #predict() function computes conditional probabilities to predict a future location based on the future conditions
+    future_location <- predict(m, future_conditions)
+    #typing name of the model object provides the a priori (overall) and conditional probabilities of each of the model's predictors
+    #R can compute posterior (predicted) probabilities if you specify type = "prob" in predict() function
+  #Understanding NB's "naivety"
+    #can build more sophisticated models to get additional data points
+    #adding more predictors complicates things
+    #with a single predictor, conditional probability is based on overlap b/w two events
+    #naive bayes algorithm uses shortcut to approximate conditional probability hoped to compute
+    #rather than treating problem as intersection of all related events
+    #algorithm makes "naive" assumption of data - assumes events are indep't 
+    #by assuming independence - joint probability can be computed by multiplying indeividual probabilities
+    #Reduces algorithm's need to observe all possible intersection in the full venn diagram
+    #Rather, multiplies probabilities from series of simpler intersections
+    #although naive assumption is not true in practice - still performs admirably on many real world tasks
+    #An "infrequent" problem
+      #in situations where no overlap between two events, the joint probability is 0
+      #whenever 0 is multiplied in a chain, entire sequence has zero
+      #no matter how overwhelming rest of evidence, any predicted probability of work on a weekend = 0
+      #usually add 1 to each event to make sure there's some overlap
+      #Laplace correction / Laplace estimator
+      naive_bayes(outcome ~ predictor, data = df, laplace = 1) 
+      #laplace = 1 sets correction
+ #Making binary predictions with regression
+    #regression methods are the most common forms of machine learning
+    #Introducing linear regression  
+    #predicting outcome (Y) from number of X's
+    #Y e.g. income, & X e.g. age, education
+    #Linear regression involves fitting straight line to data that best captures relationships
+  #Regression for binary classification
+    #here points fall in two flat rows, 1 or 0 in Y
+    #so model an S curve - logistic regression
+    #S shaped curve (logistic function)
+    #has property: for any input value of x, output is always between 0 and 1 - like probability
+    #the greater the probability, the more likely the outcome is to be labelled 1
+    #R uses glm function
+    m <- glm(y ~ x1 + x2 + x3, data = my_dataset, family = "binomial")
+    #family parameter specifies type of regression to be conducted
+    prob <- predict(m, test_dataset, type = "response")
+    # type = "response" produces predicted probabilities which are easier to interpret than default log odds
+    #to make predictions, probabilities must be converted into outcome of interest using ifelse()step
+    pred <- ifelse(prob > 0.50, 1, 0)
+    #ifelse predicts 1 if probability > 50% or 0 otherwise
+  
