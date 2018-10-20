@@ -33,8 +33,8 @@
       #cl: the actual labels from the train data
        #knn function predicts what the labels for the test data would be
        #i.e. what to classify each test data row
-       #can use table(actual, predicted) to identify any patterns in correct/incorrect
-       #can use mean(actual == predicted) to determine percent correct
+       #can use table(test actual, knn predicted) to identify any patterns in correct/incorrect
+       #can use mean(test actual == knn predicted) to determine percent correct
   #What about the 'k' in kNN?
     #The letter k is a variable that specifies the number of neighbors to consider when making the classification
     #similar to "number of neighborhoods"
@@ -58,4 +58,41 @@
     #rule of thumb is to start with k equal to sqrt of number of observations in training data
       #e.g. if car had 100 previously observed road signs - set k to 10
       #make sure to test several different values and see what happens
-    #
+    #set k in knn() function with k = # within knn()
+  #Data preparation for kNN
+    #need to prepare data for nearest neighbors
+    #kNN assumes numeric data
+      #nearest neighbor learners use distance functions to identify most similar or nearest examples
+      #many common distance functions assume data are in numeric format
+      #difficult to define distance between categories
+      #e.g. color defined by numbered color intensity (r/g/b)
+      #if have property that can't be defined numerically (e.g. shape: rectangle, diamond, etc>)
+      #common solution uses 1/0 indicators (dummy variables) to represent categories
+    #dummy coding
+      #binary "dummy" variable is create for ech category except one
+      #this variable is set to "1" if the category applies and "0" otherwise
+      #the category left out can be deduced
+      #e.g. assume 3 categories: rectangle, diamond, octagon
+      #create 2 dummy variables for rectangle & diamond
+      #if rectangle, rectangle set to 1, diamond set to 0 (and vice versa)
+      #if octagon: both rectangle & diamond set to 0
+      #dummy coded data can be used directly in a distance function
+      #two rectangle signs with values of 1 will be found to be closer together than 
+      #a rectangle and a diamond
+    #kNN benefits from normalized data
+      #when calculating distance, each feature of the input data should be measured with 
+      #the same range of values
+      #e.g. traffic sign data - each color component ranged from a minimum of zero to a max of 255
+      #suppose that we added 1/0 dummy variables for sign shapes into distance calculations
+      #two diff shapes differ by only 1 unit, but 2 diff colors can differ by 255 units
+      #different scales allows feature with wider range to have more influence
+      #compressing color to follow 0-1 range corrects for issue
+      #R does not have a built-in function to rescale data to a given range
+      normalize <- function(x) {
+         return((x - min(x)) / (max(x) - min(x)))
+      }
+      #this normalize() function can be used to perform min-max normalization
+      #rescales any vector x so that its minimum value is zero and max value is one
+      #subtracts minimum value from each value of x and divdes by range of x values
+      
+      
