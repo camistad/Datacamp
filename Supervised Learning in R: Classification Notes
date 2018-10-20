@@ -5,7 +5,7 @@
       #e.g. identifying diseases, is image a cat, etc.
   #Classification tasks for driverless cars
     #e.g. classifying signs, objects in distance
-  #Understanding neartest neighbors
+  #Understanding nearest neighbors
     #to start training driverless car, would supervise by demonstrating desired behavior
     #as it observes each sign
     #after some time under instruction, vehicles builds database recording sign & target behavior
@@ -26,5 +26,36 @@
     #knn function: in "class" library
       library(class)
       pred <- knn(training_data, testing_data, training_labels)
+      knn(train = x, test = y, cl = z)
       #requires 3 parameters: 1) set of training data, 2) test data to be classified, 3) labels for training data 
-  #  
+      #train: past data of columns of different predictors 
+      #test: new data of columns of different predictors
+      #cl: the actual labels from the train data
+       #knn function predicts what the labels for the test data would be
+       #i.e. what to classify each test data row
+       #can use table(actual, predicted) to identify any patterns in correct/incorrect
+       #can use mean(actual == predicted) to determine percent correct
+  #What about the 'k' in kNN?
+    #The letter k is a variable that specifies the number of neighbors to consider when making the classification
+    #similar to "number of neighborhoods"
+    #ignored k for now, therefore R uses default value of 1
+    #therefore only the single nearest, most similar, neighbor was used to classify the unlabeled example
+      #Example here: show how k can have substantial impact on performance of classifier
+      #Vehicle observes 1 crossing sign with 5 nearest neighbors (2,3,4 crossing, 1, 5 speed limit)
+      #nearest neighbor 1 is a speed limit sign, but shares very similar background color
+      #knn classifier with k set to one would make an incorrect classification
+      #note that 2, 3, 4 are correct
+      #now suppose set k to three - then 3 nearest neighbors (1, 2, 3) would take a vote
+      #here there would be 2 crossing signs and 1 speed limit sign
+      #category with the majority of nearest neighbors (crossing sign)
+      #similar if k set to five, then 5 nearest neighbors would vote
+      #still choose crossing sign as 3 crossing signs to 2 speed limit signs wins
+      #if tie, winner decided at random
+    #note: bigger k != better
+    #smaller k -> subtle patterns - small neighborhoods
+    #larger k -> fuzzy boundary - allows for some other factor that can add randomness to data
+    #no universal number to set k to - depends on pattern to be learned and impact of noisy data
+    #rule of thumb is to start with k equal to sqrt of number of observations in training data
+      #e.g. if car had 100 previously observed road signs - set k to 10
+      #make sure to test several different values and see what happens
+    #
