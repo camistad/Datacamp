@@ -238,5 +238,25 @@
     #being able to model combinations is important for creating best predictive models
     #R formula interface uses * to create interaction
     #resulting model will include terms of individual and combined (interaction) effects
-    
-  
+  #Automatic feature selection
+    #Unlike other ML methods, regression asks human to specify the model's predictors ahead of time
+    #Therefore, each of the donation models required some subject matter expertise to identify best predictor
+    #Automatic feature selection can be used - especially if have too many predictors
+  #Stepwise regression
+    #Building rergession model step by step, evaluating each predictor to see which ones add value to the final model
+    #backward stepwise: model contains all predictors first, then removes one step by step
+      #if removing does not substantially impact ability to predict, then stays removed
+      #at each step, remove the assumed to be least impacting predictor
+    #foreward stepwise: model contains no predictors, examines each potential predictor 
+      #add predictors step-by-step until no predictors add substantial value to model
+    #note that backward/foreward selection don't result in same model
+    #statisticians also raise concerns that stepwise models may impact assumptions
+    #model may over or understate importance of some of the predictors
+    #stepwise regression allows model to be built in absence of theory
+  #Adding all predictors to dataframe
+    glm(outcome ~ ., data = df, family = "binomial")
+    #note how you specify all with .
+    #if you want to remove any specific predictors  - e.g. predictorone
+    glm(outcome ~ . - predictorone, data = df, family = "binomial")
+    #if you want to specify an interaction, must do so manually
+    glm(outcome ~ . + predictorone * predictortwo, data = df, family = "binomial")
