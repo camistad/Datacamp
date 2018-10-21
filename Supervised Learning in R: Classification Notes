@@ -170,8 +170,73 @@
     m <- glm(y ~ x1 + x2 + x3, data = my_dataset, family = "binomial")
     #family parameter specifies type of regression to be conducted
     prob <- predict(m, test_dataset, type = "response")
-    # type = "response" produces predicted probabilities which are easier to interpret than default log odds
+    #type = "response" produces predicted probabilities which are easier to interpret than default log odds
+    #if you don't specify type = "response" then the predict() outputs predictions in terms of log odds
     #to make predictions, probabilities must be converted into outcome of interest using ifelse()step
     pred <- ifelse(prob > 0.50, 1, 0)
     #ifelse predicts 1 if probability > 50% or 0 otherwise
+  #Model performance tradeoffs
+    #rare events lead to tradeoffs for classification models
+    #when one outcome is very rare, predicting the opposite can result in a very high accuracy
+    #Can be necessary to sacrifice overall accuracy to better target outcome of interest
+    #e.g. if you have a more accurate model that's only good at predicting the bad outcome, 
+    #may want to find a less accurate model if it is better at predicting when there's a good outcome
+  #Understanding ROC cruve
+    #provides way to better understand models ability to distinguish between positive and negative predictions
+    #e.g. outcome of interest vs. all others
+    #imagine you're working on project with positive outcome x & negative outcome 0
+    #if classifier is poor, X's and O's are very mixed
+    #ROC curve depicts relationship between percentage of positive examples as it relates
+    #to percentage of other outcomes
+    #When X's & O's are even, then diagonal line, as proportion of interesting examples
+    #rises evenly with proportion of negative examples
+    #BUT: if you have machine learning model that can sort model to push outcomes to left of dataset
+    #Then ROC curve is drawn, it's no longer on diagonal, as model can identify several positive examples
+    #for each negative example it accidentally prioritized
+    #diagonal line acts as baseline performance for a very poor model
+    #the further another curve is from the diagonal line, the better it performs
+    #To quantify performance, AUC is used (Area Under Curve) 
+    #AUC measures area under ROC curve
+    #baseline has AUC = .5
+    #Perfect model has AUC = 1, curve all the way in upperleft of square
+    #AUC closer to 1 = better - but can be misleading
+    #Curves of varying shape can have equal AUC, 
+    #But need to see how shape of each curve is and therefore, model's ability to identify
+    #e.g. some models may be able to identify easy cases, but not hard ones 
+    #ROC curves are important tool for comparing models and determining best model for project
+    #when used with a single model, it can help visualize tradeoff 
+    #between true positives and false positives for outcome of interest
+    #pROC package has roc() function for creating ROC curves and auc() function for judging auc
+    library(pROC)
+    x<-roc(column of actual, column of predicted probabilities)
+    auc(x)
+  #Dummy variables, missing data, and interactions
+    #All predictors used in regression must be numeric
+    #must turn categorical data into number - e.g. with dummy variables
+    #missing data is also problematic
+    #Also sometimes need to model interactions among predictors
+  #Dummy coding categorical data
+    #creates a set of binary (one-zero) variables that represent each category
+    #except 1 that serves as reference group
+    #glm() function can automatically dummy code any factor type variables used in model
+    my_data$gender <- factor(my_data$gender,
+                      levels = c(0, 1, 2),
+                      labels = c("Male", "Female", "Other"))
+    #Simply apply factor() function to the data
+    #note how a categorical feature may be represented as numbers (1, 2, 3)
+    #may still want to factor it - make sure it's treated appropriately
+  #Imputing missing data
+    #by default, model will exclude any observation w/ missing values on its predictors
+    #with categorical missing data, can just treat as missing
+    #can fix with imputation - impute data with some guess on what data can be
+    #e.g. mean imputation
+    #since there may be systematic reasons for missing data
+    #can add a binary 1/0 missing value indicator to model to note fact that value was imputed
+  #interaction effects
+    #2 predictors, when combined, can have different impact on outcome 
+    #combination may increase, decrease, or eliminate impact of individual predictosr
+    #being able to model combinations is important for creating best predictive models
+    #R formula interface uses * to create interaction
+    #resulting model will include terms of individual and combined (interaction) effects
+    
   
