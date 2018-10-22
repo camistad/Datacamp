@@ -260,3 +260,112 @@
     glm(outcome ~ . - predictorone, data = df, family = "binomial")
     #if you want to specify an interaction, must do so manually
     glm(outcome ~ . + predictorone * predictortwo, data = df, family = "binomial")
+  #Making decisions with trees
+    #Difficult / complex decisions can be made simpler by breaking it down into a series of smaller decisions
+    #e.g. considering accepting job offer can be broken down into benefits
+    #classification trees a.k.a decision trees handle same way
+    #used to find a set of if/else conditions that are helpful for taking action
+    #they can be useful for business strategy (e.g. loan applications)
+    #Goal: Model relationship between predictors and outcome of interest
+    #Begins at root node, data flows through if/else decision nodes that split
+    #data according to its attributes
+    #Branches indicate potential choices, leaf nodes indicate final decisions
+    #leaf nodes == terminal nodes
+    #Example: Loan Application
+      #Applicant fills out loan info: loan purpose, credit history etc.
+      #Bank must then decide if individual can repay debt
+      #Use historical applicant data and loan outcomes to build classification tree
+      #learn criteria most predictive of future loan repayment
+  #Divide and conquer
+    #growing decision tree uses "divide and conquer" process
+    #attempts to divide dataset into partitions with similar values for outcome of interest
+    #E.g. loan applications: separate applicants that are likely to repay from likely to default
+    #E.g. D&C considers two aspects of each applicant: credit score & requested amount
+    #to divide and conquer, algorithm looks for initial split that creates the 2 most homogenous groups
+    #first: split into groups of high and low credit scores
+    #then: divides for high and low requested loan amounts
+    #each split results in if/else decision tree
+    #then it predicts default or repaid based on if/else
+  #Building trees in R
+    #several packages for classification trees
+    #rpart package aka. recursive partitioning
+    library(rpart)
+    m <- rpart(outcome ~ loan_amount + credit_score, data = loans, method = "class")
+    #rpart() function uses R formula (Y ~ X) 
+    #"class" method tells rpart to build classification tree
+    #predict() function creates predicted class values for test dataset
+    p<- predict(m, test_data, type = "class")
+  #rpart.plot package
+    library(rpart.plot)
+    rpart.plot(model)
+    #to load plot of decision tree
+  #Growing larger classification trees
+    #knowing more about growing conditions of decision trees -> more robust classification models
+  #Choosing where to split
+    #classification trees use divide and conquer to identify splits that creates the most pure or
+    #homogenous partitions
+    #algorithm attempts a split on the feature values and calculates the purity of resulting partitions
+    #split producing the most pure partitions are used first
+    #as tree grows, results in more homogenous partitions
+    #Can't draw diagonal line (requires considering 2 or more features in combo)
+    #instead decision tree always creates axis-parallel splits (splits line up with axes)
+    #potential weakness of decision trees: overly complex in data
+    #can divide and conquer until run out of feature values to split on / made all decisions
+    #may overfit - rather than model important trends in data, tree "overfits", i.e. models the noise
+    #focuses on extremely subtle patterns that don't apply generally
+    #classification trees have a tendency to overfit datasets they're trained on
+    #when machine learning model overfits in training dataset, must take care not to overestimate future perf
+    #therefore, important to simulate unseen future data by constructing test set that algorithm can't use when determining tree
+    #e.g. complete data set is divided into traiing data and test set
+    #use sample() function
+    sample(number of rows in data set, number of rows you need in training set)
+  #Tending to classification trees
+    #decisions trees can become overly large and complex quickly
+    #Grooming healthy classification trees requires pruning strategies - ensure the trees are just right (not too large/too small)
+  #pre-pruning
+    #method to prevent tree from being too large - stopping growing process early
+    #stops divide and conquer once tree reaches predefined size
+    #Another option is minimum number of observations at a node in order to split, otherwise stop
+    #issue: stopped too early -> missing potential patterns
+  #post-pruning
+    #creating large tree then prune back to reduce size
+    #nodes and branches with only a minor impact on trees overall accuracy are removed after the fact
+    #As tree becomes complex, model makes fewer errors - 
+    #while performance improves a lot at first, later increases reduces impact on performance
+    #rpart package has function for pre-pruning and post-pruning
+    #can preprune with rpart.control() function - allows max depth and min split parameters
+    prune_control <- rpart.control(maxdepth = 30, minsplit = 20)
+    m <- rpart(repaid ~ credit_score + request_amt, 
+               data = loans,
+               method = "class",
+               control = prune_control)
+    #post-prune with plotcp() function and prune() function
+    #plotcp() generates visual of error rate + model complexity - prune at optimal complexity
+    plotcp(m)
+    #prune() function allows prune
+    m_pruned <- prune(m, cp = 0.20)
+    #prune function has cp for complexity parameter
+  #Seeing the forest from the trees
+    #Decision tree forests have become very popular
+  #Understanding random forests
+    #collection of smaller, simpler trees that better reflect data
+    #Growing diverse trees require allocating each tree a random subset of data
+    #random forests refer to specific growing algorithm in which features and examples differ from tree to tree
+    #building based on multiple trees rather than single large complex tree
+  #Making decisions as an ensemble
+    #ensemble methods are based on principle that weaker learners become stronger with teamwork
+    #in random forests, each tree is asked to make a prediction
+    #groups overall prediction is determined by a majority vote
+    #though each tree reflects only narrow portion of data
+    #overall consensus is strengthened
+    #randomForest package & randomForest() function
+    library(randomForest)
+    m <- randomForest(repaid ~ credit_score + request_amt, data = loans,
+                      ntree = 500 # number of trees in the forest
+                      #mtry = sqrt(p)) # number of predictors (p) per tree
+    #the ntree parameter dictates number of trees to set in forest 
+    #mtry parameter = number of features selected at random for each tree
+      #by default - uses sqrt(p)
+    #predict() function uses the model to make predictions
+    p <- predict(m, test_data)
+    
