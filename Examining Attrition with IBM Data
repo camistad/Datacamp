@@ -1,0 +1,70 @@
+#Attrition Study
+  #Set Working Directory
+  setwd("~/Google Drive/R Training/Data/People Analytics")
+  #Open Data
+  ibm<-read_csv("IBM_HR_Data.csv")
+  #Check what we're working with
+  glimpse(ibm)
+    #Important to note that several variables are characters variables that can be turned into factors
+  #Identify unique values
+  unique(ibm$BusinessTravel)
+  unique(ibm$Department)
+  unique(ibm$EducationField)
+  unique(ibm$Gender)
+  unique(ibm$JobRole)
+  unique(ibm$MaritalStatus)
+  unique(ibm$Over18)
+  unique(ibm$OverTime)
+  #Recode character variables into factors using mutate_if()
+  ibm<-read_csv("IBM_HR_Data.csv") 
+    ibm <- ibm %>%
+    mutate_if(sapply(ibm, is.character), as.factor)
+  #Recode attrition so "Yes" = 1, "No" = 0
+    ibm <- ibm %>%
+    mutate(Attrition = ifelse(Attrition == "Yes", 1, 0))  
+  #Recode overtime so "Yes" = 1, "No" = 0
+    ibm <- ibm %>%
+      mutate(OverTime = ifelse(OverTime == "Yes", 1, 0))  
+    
+    #Create a training & Test sample - for other types of analysis
+    ibmIndex <- sample(1:nrow(ibm), size=0.8*nrow(ibm))
+    
+    ibmTrain <- ibm[ibmIndex,]
+    ibmTest <- ibm[-ibmIndex,]  
+
+  #Logistic Regression Analysis
+    #Remove the weird 1 level factor
+    ibm <- ibm %>%
+      select(-Over18)
+    # Specify a full model using all of the potential predictors
+    full_model <- glm(Attrition ~ ., data = ibm, family = "binomial")    
+    #Look at the predictors
+    summary(full_model)
+    
+    # Estimate the Attrition probability
+    ibm$AttritionProb <- predict(full_model, type = "response")
+    
+    # Find the donation probability of the average prospect
+    mean(ibm$Attrition)
+    
+    # Predict a donation if probability of donation is greater than average (0.0504)
+    ibm$AttritionPred <- ifelse(ibm$AttritionProb > 0.1612245, 1, 0)
+    
+    # Calculate the model's accuracy
+    mean(ibm$Attrition == ibm$AttritionPred)  
+    
+    #Examine true positives and true negatives - note: left = predicted/1st var, top = actual/2nd var
+    table(ibm$AttritionPred, ibm$Attrition)
+
+  #ROC Curve
+    library(pROC)
+    
+    # Create a ROC curve
+    ROC <- roc(ibm$Attrition, ibm$AttritionProb)
+    
+    # Plot the ROC curve
+    plot(ROC, col = "blue")
+    
+    # Calculate the area under the curve (AUC)
+    auc(ROC)
+    
