@@ -1,0 +1,28 @@
+#Supervised Learning in R: Regression
+  #Regression: predicting a numerical outcome (DV) from a set of inputs (IVs)
+    #statistical sense: predicting the expected value of the outcome
+    #casual sense: predicting a numerical outcome (vs. a discrete outcome)
+    #distinguishes regression from classification (task of making discrete predictions
+    #e.g. regression: how many units will sell; classification: will customer buy a product
+  #Regression from a machine learning perspective
+    #scientific mindset is that modeling is done to understanding the process that produced data (how each IV affects DV)
+    #engineering mindset is that modeling is done to predict accurately - less on relationship between vars and outcomes
+    #Machine learning uses an engineering mindset
+  #Linear Regression - the fundamental method
+    #assumes that expected outcome is the weighted sum of all inputs
+    #assumes that change in y is linearly proportional to change in any X
+    #In R, fit linear regression model using lm
+    cmodel <- lm(outcome ~ IV1 + IV2, data = df)
+    #To convert string to formula, use as.formula function
+    as.formula("outcome ~ IV")
+  #Looking at the Model
+    #Print model, see coefficients
+    #Intercept is beta 0 - the value of y when all inputs are 0
+    #positive coefficients = increase in Y as X increases
+    #coefficient value (X) = for every unit increase in IV, there's X increase in outcome - assuming others held constant
+    #can get model diagnostics using summary()
+    summary(model)
+    #includes values of coefficients including standard error etc.
+    #to get diagnostics into a dataframe, use glance() function from broom package
+    glance(model)
+    
