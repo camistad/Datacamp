@@ -485,4 +485,115 @@ model.matrix(WtLoss24 ~ Diet + Age + BMI, data = diet)
   bikesFeb$pred <- predict(model, bikesFeb)$predictions
     #calculating RMSE shows that Random forest has lower RMSE than quasipoisson
     #can also compare predictions vs. actual hourly bike rentals via scatterplot, or by plotting data as f(n) of time
+  #One-Hot-Encoding Categorical Variables
+    #How to safely convert categorical variables to indicator variables
+    #useful for using xgboost() 
+    #Why convert categorical variables manually? most r functions manage the conversion for you e.g. model.matrix()
+    #xgboost() does not; must convert categorical variables to numeric representation
+    #xgboost() is originally a python package and requires categorical variables to be converted to indicators - i.e. one-hot-encoding
+  #One-hot-encoding and data cleaning with vtreat
+    #Basic idea: 
+    #designTreatmenntsZ() to design a treatment plan from the training data, 
+      #this treatment plan records the steps needed to safely one-hot-encode both training & future data
+    #then prepare() to create "clean" data - convert to a form compatible with xgboost
+    #all numerical variables with no missing values
+    #use prepare() with treatment plan for all future data
+  #A small vtreat example
+    #have data where x is a categorical input variable with levels one, two, and three
+      #u is a numerical input variable & y is an outcome
+    #1. create treatment plan
+  vars <- c("x", "u")
+  treatplan <- designTreatmentsZ(dframe, varslist, verbose = FALSE)
+    #where dframe = training data; varlist = list of input variable names; set verbose = FALSE to suppress progress messages
+    #treatment plan includes element called the score frame, which holds a mapping from original to new variable names and the type of the new variables
+    > (scoreFrame <- treatplan$scoreFrame %>% 
+      select(varName, origName, code))
+
+           varName origName  code
+   1   x_lev_x.one        x   lev
+   2 x_lev_x.three        x   lev
+   3   x_lev_x.two        x   lev
+   4        x_catP        x  catP
+   5       u_clean        u clean
+    #get lev (indicator variables) and clean (numeric vars cleaned not to hold NA etc.) variables 
+    #once you have new variable names, can use prepare() function & treatment plan to create new treated training data
+    #this training data will be suitable for xgboost model
+  training.treat <- prepare(treatmentplan, dframe, varRestriction = newvars)
+    #inputs to prepare():
+      #treatment plan: treatment plan
+      #dframe: data frame
+      #varRestriction: list of variables to prepare (optional); default is to prepare all variables
+  #Before and after data treatment
+    #categorical variables are now 3 indicator variables; treated data is all numerical, with no missing values
+    #note: outcome variable is not present in the treated data
+    #vtreat Treatment is robust
+    #Sometimes there are levels of a categorical variable that don't appear in the training data
+    #usually this will crash a model; vtreat handles this
+  #Novel levels
+    #when a level of a categorical variable is rare, it won't always show up in trainig data
+    #using model.matrix or caret::dummyVars to one-hot-encode won't work
+    #vtreat is safer because it manages novel levels safely
+    #vtreat encodes novel levels that weren't present in data as all zeros - allows downstream models to accept novel values w/o crashing
+  #Gradient Boosting Machines
+    #how to fit gradient boosting models in R with the xgboost package
+    #gradient boosting = ensemble method that builds up a model by incrementally improving the existing one
+    #1. fit a shallow tree T1 to the data
+    #2. fit a tree to the residuals of the model and find the weighted sum of that tree with the first one that gives the best fit
+      #i.e fit a tree T_2 to the residuals, find the weighted sum such that M2 = M1 + yT2 is the best fit to the data
+    #for regularized boosting, decrease the learning by a factor eta (between 0 & 1)
+    #eta closer to 1 will give faster learning, but increase overfit risk; eta close to 0 -> less risk of overfit; slower learning
+    #repeat until residuals are small enough or the max nmber of ierations is reached
+    #note that gradient boosting optimizes error on the training data -> risk of overfitting model
+      #best practice = estimate out of sample error via cross-validation for each incremental model, then retroactively decide how many trees to use
+  #Best Practice (with xgboost())
+    #1. run xgb.cv() with a large number of rounds (trees)
+      #xgb.cv() fits a model and calculates the cross-validated errors
+    #2. xgb.cv()$evaluation_log: records estimated RMSE for each round
+      #use evaluation log to find the number of trees that minimizes estimated RMSE: (etabest)
+    #3. run xgboost(), setting nrounds = etabest (the number of trees that minimizes estimated RMSE)
+  #Example: Bike Rental Model
+  treatplan <- designTreatmentsZ(bikesJan, vars)  
+  newvars <- treatplan$scoreFrame %>%
+      filter(code %in% c("clean", "lev")) %>%
+      use_series(varName)
+
+  bikesJan.treat <- prepare(treatplan, bikesJan, varRestriction = newvars)
+    #Since xgboost can't work with categorical variables, use vtreat to clean the data
+    #For xgboost(): input data: as.matrix(bikesJan.treat; outcome: bikesJan$cnt
+  #Training a model with xgboost() / xgb.cv()
+    cv <- xgb.cv(data = as.matrix(bikesJan.treat), 
+               label = bikesJan$cnt,
+               objective = "reg:linear",
+               nrounds = 100, nfold = 5, eta = 0.3, depth = 6)
+    #her we set nround to 100, specify 5-fold cross validation for estimating out of sample error 
+    #key inputs to xgb.cv() and xgboost()
+      #data: input data as matrix; label: outcome
+      #objective: for regression - "reg:linear"
+      #nrounds: maximum number of trees to fit
+      #eta: learning rate
+      #depth: maximum depth of individual trees
+      #nfold (xgb.cv() only): number of folds for cross validation
+  #Find the right number of trees
+    #out of sample error estimates are in the column test_rmse_mean of the evaluation log
+  elog <- as.data.frame(cv$evaluation_log)
+  (nrounds <- which.min(elog$test_rmse_mean))
+  [1] 78
+    #here, the index of the minimum value corresponds to the best number of trees (hence which.min() function)
+    #so run xgboost with right number of trees to get final model
+    
+  nrounds <- 78
+
+  model <- xgboost(data = as.matrix(bikesJan.treat), 
+                   label = bikesJan$cnt,
+                   nrounds = nrounds,
+                   objective = "reg:linear",
+                   eta = 0.3,
+                   depth = 6)
+  #Predict with an xgboost() model
+    #predict function for xgboost takes a model and the input data - make sure to prepare test data using vtreat
+  bikesFeb.treat <- prepare(treatplan, bikesFeb, varRestriction = newvars)
+  bikesFeb$pred <- predict(model, as.matrix(bikesFeb.treat))
+    #comparing against quasipoisson (RMSE = 69.3), random forests (RMSE = 67.15), and gradient boosting (RMSE = 54.0), 
+    #gradient boosting performed best, RMSE 54
+  #can prepare february predictions to actual february hourly bike rentals as a scatterplot, and plotted against time
   #
