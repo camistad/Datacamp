@@ -25,4 +25,329 @@
     #includes values of coefficients including standard error etc.
     #to get diagnostics into a dataframe, use glance() function from broom package
     glance(model)
-    
+  #Predicting once you fit a model
+    #calling predict on model will return predictions for data used to fit model (training data)
+    predict(model, data = dataframe)
+    #can compare model's predictions to actual using ggplot
+    #if model predicted perfectly, all points will fall on blue line (using abline)
+    #to apply model to new data, use newdata 
+    predict(model, newdata = new_dataframe)
+  #Wrapping up linear regression
+    #Advantages: easy to fit and to apply, concise (don't need much storage), 
+    #smooth and less prone to overfit - thus training and new data are much closer
+    #interpretable - can interpret more easily
+    #disadvantages: can't express complex, nonlinear/nonadditive relationships
+    #if nonadditive/nonlinear, linear regression won't predict as well as other models
+    #collinearity - when input variables are partially correlated
+    #if variables highly correlated, coefficients may change sign
+      #means can't interpret coefficients, but not necessarily affects prediction accuracy
+    #model may be unstable - unusually large coefficients / standard errors can indicate high collinearity
+      #leads to unstable model that can't be trusted for accuracy
+  #Evaluating a model graphically
+    #Plotting ground truth vs. predictions
+    #in a well-fitting model, x = y line runs through center of points
+    #in a poorly fitting model, points are all on one side of x = y line
+    #may have systematic errors - errors correlated with value of outcome
+    #indicates that you don't yet have all the important variables in your model
+  #Residual Plot
+    #plots the residuals: difference between actual outcome & prediction against the predictions
+    #in model with no systematic errors, points would be evenly distributed between positive and negative
+    #would have same magnitude above and below of errors
+    #with systematic errors - you'd see clusters of all positive and all negative residuals 
+  #Gain Curve Plot
+    #useful when sorting the instances is more useful than predicting exact outcome value
+    #e.g. have a model predicting home prices, more interested in identifying higher value homes than actual selling prices
+    #the x axis is fraction of total houses as sorted by model
+    #the y axis is the fraction of total accumulated home sales
+    #the diagnoal gray line shows gain curve if houses sorted randomly
+    #the green curve (wizard curve) - is the curve of a perfect model
+    #the blue curve is what our model shows
+    #In the image, the model follows curve up until 30% - meaning identifies top 30 percent of highest value houses
+    #after that, the model doesn't sort quite as well
+    #Gain Curve plots are useful for models predicting probability
+    #will use gain curve plot function from WVPlots package
+      #takes as input: dataframe, names of prediction & outcome variables, and title
+    GainCurvePlot(houseprices, "prediction", "price", "Home price model")
+    GainCurvePlot(dataframe, IV, DV, title)
+    #A relative gini coefficient close to one shows that the model correctly sorts high unemployment situations from lower ones
+  #Root Mean Squared Error (RMSE)
+    #key metric for validating prediction performance of a regression model
+    #Definition: Square root of the mean squared error of the model on a dataset
+    #Think of RMSE as typical prediction error of your model on that data
+    #many regression models in linear regression are designed to minimize squared error
+    #Calculate error
+      #price: column of actual sale prices (in thousands)
+      #prediction: column of predicted sale prices (in thousands)
+    err <- houseprices$prediction - houseprices$price
+      #then square it
+    err2 <- err^2
+      #then take the mean and sqrt it
+    rmse <- sqrt(mean(err2))
+    #RMSE = 58.33 - means typical prediction error of 58.3 thousand dollars
+  #Is the rmse large or small?
+    #depends on how accurate you need prediction to be for your specific outcome
+    #good way to evaluate is compare to standard deviation of outcome
+    #sd(price) ~ 135; whereas RMSE 58.3
+    #so sd is about 135000, difference between the typical house price and the average house price
+    #so RMSE is smaller than SD - so model estimates houseprice better than simply taking average
+  #R Squared
+    #a measure of how well the model fits the data; value between 0(bad) and 1 (good)
+    #defined as 1 - ratio of residual SS to Total SS
+    #therefore R^2 is usually called variance explained by model
+    #RSS is sum of squared error of model predictions
+    #if RSS is small compared to total SS then R^2 is large and model fits well
+  #Calculate R^2 of the house price model: RSS
+    #first calculate error
+  err <- houseprices$prediction - houseprices$price
+    #square it and take the sum
+  rss <- sum(err^2)
+    #RSS = 136138
+  #Calculate R^2 of the house price model: SSTot
+    #take the difference of prices from the mean price
+  toterr <- houseprices$price - mean(houseprices$price)
+    #square it and take the sum
+  sstot <- sum(toterr^2)
+    #SSTot = 713615
+  #Calculate R^2 of the House Price Model
+    #Take ratio of RSS and SSTot, and subtract it from 1 to get R^2
+  (r_squared <- 1 - (rss/sstot)) 
+    #R^2 = .809, 81% of variance in model is explained by IV's
+  #Reading R^2 from the model
+    #for lm() models, can get from summary or from glance
+  summary(hmodel)
+  glance(hmodel)$r.squared
+  #Correlation and R^2
+    #R^2 is square of correlation between outcome and prediction
+    #which is what you want out of a model, that the predictions & true outcome are correlated
+    #this correspondence is only true for data model is trained on, not new data
+  #Properly Training a model
+    #in general, models perform better on training than future data
+    #with linear models with too many variables can produce misleading results if only using training data
+    #overfit happens when Training data R^2 = 0.90, but trest data R^2 = 0.15
+  #Test / Train Split
+    #split data into 2, one set to test and one set to train
+    #e.g. model female unemployment; 66 rows for train, 30 rows for test
+    #fit linear model to training data, then check RMSE & R^2 for both train and test
+  #Cross-validation
+    #used if you don't have enough data to train and test on
+    #Used to estimate model's out of sample performance
+    #In n-fold cross validation , you partition data into n-subsets (e.g. 3)
+    #First, train a model using the data from sets A & B and use to predict on C
+    #Second, train a model using data from sets B & C and predict on A
+    #Third, train a model using data from A & C and test/predict on B
+    #Now, none of models have made predictions on it's own training data
+    #all the predictions are essentialy "test set predictions" 
+    #Thus: RMSE & R^2 calculated from these predictions should give unbiased estimate of how a model (one fit to all the training data)
+    #will perform on future data
+  #Create a cross-validation plan
+    #use function kWayCrossValidation from vtreat package
+  library(vtreat)
+  splitPlan <- kWayCrossvalidation(nRows, nSplits, NULL, NULL)
+    #nRows: number of rows in the training data
+    #nSplits: number of folds (partitions) in the cross-validation
+    #e.g. nfolds = 3 for 3-way cross-validation
+    #remaining two arguments not needed here
+    #the function returns the indices for training and testing each fold
+    #use data with the training indices to fit model and then make predictions on data with app/test indices
+  split <- splitPlan[[1]]
+  model <- lm(fmla, data = df[split$train,])
+  df$pred.cv[split$app] <- predict(model, newdata = df[split$app,])
+    #if the estimated model performance looks good enough, then use all data to fit final model
+    #can't evaluate final models future performance, because you don't have data to evaluate with
+    #cross validation only tests the modeling process
+    #test-train split tests the final model
+    #can use cross-validation to estimate out of sample performance of a model to fit female unemployment
+    #estimates similar to estimates made using a test-train split
+  #the runif() function  
+  #runif() function can be used to create a training and test set
+    #if you have a dataset dframe of size N, and you want a random subset of approximately size X% of N
+    #1) generate a vector of uniform random numbers
+  gp = runif(N)
+    #2. use dframe and get subset using gp
+  dframe[gp < X]
+    #3. complement of this would be 
+  dframe[gp >= X]
+  #Splitplan
+  If dframe is the training data, then one way to add a column of cross-validation predictions to the frame is as follows:
+
+# Initialize a column of the appropriate length
+dframe$pred.cv <- 0 
+
+# k is the number of folds
+# splitPlan is the cross validation plan
+
+for(i in 1:k) {
+  # Get the ith split
+  split <- splitPlan[[i]]
+
+  # Build a model on the training data 
+  # from this split 
+  # (lm, in this case)
+  model <- lm(fmla, data = dframe[split$train,])
+
+  # make predictions on the 
+  # application data from this split
+  dframe$pred.cv[split$app] <- predict(model, newdata = dframe[split$app,])
+}
+
+#Categorical Inputs
+  #Example: effect of diet on weight loss
+  #want to model weight loss over 24 months as a function of diet, age & BMI
+  #Diet = categorical value (Med, Low-Carb, Low-Fat)
+#model. matrix()
+  #in many r modelling functions categorical variables with N possible levels are rep'd under the covers as
+  #N-1 0/1, or indicator variables
+  #can show via model.matrix() call - takes a formula and df as input
+model.matrix(WtLoss24 ~ Diet + Age + BMI, data = diet)
+  #diet variable then becomes 2 indicators - one for low-fat, one for mediterranean; left-out (Low-Carb) = default/reference level
+  #This is termed "One-Hot encoding" - converting a categorical variable into a set of indicator variables
+#Interpreting the Indicator Variables
+  #Under the covers, the lm() function solves a numerical problem with a coefficient for every indicator variable
+  #coefficients for Med & low-fat rep change in weight loss from being on the low-carb diet for a person of same age & BMI
+  #E.g. here med coefficient = -.97883
+  #therefore, person on med diet lost 1kg less than a person of same age & BMI on the low-carb diet
+#Issues with one-hot-encoding
+  #Too many levels can be a problem (e.g. zip code)
+    #using variables with many possible variables can be dangerous for computation (too many vars compared to rows -> overfit)
+  #Don't hash with geometric methods
+    #some people convert categorical variables into numeric - but linear regression treats numerically specifically
+#Interactions
+  #Cases that violate linear assumption
+  #Additive Relationships
+    #example of an additive relationship
+  plant_height ~ bacteria + sun
+    #change in height is the sum ot the effects of bacteria and sunlight
+    #change in sunlight causes same change in height, indep't of bacteria
+    #change in bacteria causes same change in height, indep't of sunlight
+  #What is an interaction?  
+    #The simultaneous influence of two variables on the outcome is not additive
+  plant_height ~ bacteria + sun + bacteria:sun
+    #change in height is more (or less than the sum of the effects due to sun/bacteria
+    #at higher levels of sunlight, 1 unit change in bacteria causes more change in height
+    #assuming sun = two values: sun & shade; interaction b/w sun & bacteria means change in height
+    #due to a change in bacteria will be different in sun than shade
+  #Expressing interactions in formulae
+    #must specify interaction explicitly; e.g. with colon; asterisk is shorthand for main effects of a & b & interaction between
+    #since interaction is also the product symbol, you must use the I() function in a formula to use the expression "a times b" in a formula
+  y ~ I(a*b)
+    #interaction - colon(:)
+  y ~ a:b
+    #main effects and interactions - Asterisk *
+  y ~ a*b
+    #both mean the same
+  #Finding the correct interaction pattern
+    #using the wrong pattern of main effects and interacitons in LR can lead to suboptimal models / incorrect interpretation of input-outcome
+    #since focused on prediction, will need to test with cross-validation - 3 options
+      #model with no interaction, model with main effects & interactions, model with only interaction
+      #use RMSE as comparison factor
+  #Transforming the response before modeling
+    #transforming the output rather than predicting the output directly to get better models
+    #e.g. log transforming monetary data (e.g. income, profits) 
+    #useful as monetary values tend to be skewed w/ long tail - aka lognormally distributed (positive skew) and wide dynamic range
+    #with lognormal data, mean value is usu. greater than median value
+    #Regression algorithms usually predict expected (mean value). If mean value usu. greater than median -> overpredict income for certain indivs
+    #take log of the data -> more normal distribution; data becomes more modest
+  #The Procedure
+    #1. Log the outcome and fit a model
+  model <- lm(log(y) ~ x, data = train)
+    #2. apply the model to the data you want to make predictions for
+  logpred <- predict(model, data = test)
+    #3. Exponentiate to transform the predictions back to outcome space
+  pred <- exp(logpred)
+    #One consequence of log transforming is that prediction errors are multiplicative in outcome spaces
+    #therefore size of error is relative to size of outcome
+    #relative error = prediction error divided by the true outcome
+    #log transforming is useful when you want to reduce relative error, rather than additive error
+    #e.g. predicting monetary amounts - being off in prediction by $100 is different when true value = $250 vs. $10000
+  #Root Mean Squared Relative Error
+    #a model predicting log-outcome reduces RMS-relative error
+    #but the model will often have larger RMSE than a model that predicts outcome directly
+  #Example Model Income Directly
+  modIncome <- lm(Income ~ AFQT + Educ, data = train)
+    #where AFQT = score on proficiency test, Educ = years education, Income = income
+    #can evaluate model's error & relative error on new data
+  test %>%
+    mutate((pred = predict(modIncome, newdata = test),
+            err = pred - Income) %>%
+     summarize(rmse = sqrt(mean(err^2)),
+               rms.relerr = sqrt(mean((err/Income)^2)))
+     #RMSE = 36,819.39, RMS-Relative error = 3.295189
+  #Model log(income)
+  modLogIncome <- lm(log(Income) ~ AFQT + Educ, data = train
+  test %>% 
++     mutate(predlog = predict(modLogIncome, newdata = test), 
++            pred = exp(predlog), 
++            err = pred - Income) %>%
++     summarize(rmse = sqrt(mean(err^2)),
++               rms.relerr = sqrt(mean((err/Income)^2)))
+    #as seen, RMSE = 38,906.61, RMS relative = 2.276865
+    #So compared to outright, RMSE is larger, but RMS relative is smaller
+  #Relative Error
+    #recall relative error = (pred-y) / y
+    #error is relative to the tru eoutcome
+  #Transforming Inputs before modeling
+    #transforming input variables before modeling (e.g. transforming the IV before modeling)
+    #Why to transform input variables
+    #main reason is usually that you have domain knowledge suggesting transformed variables may be more informative
+    #pragmatic reasons: make variable easier to model with; 
+    #e.g. log transform to reduce dynamic range; log transform because meaningful changes in variable are multiplicative
+    #transform variables to meet modeling assumptions (e.g. linearity)
+  #Example: predicting anxiety
+    #plot shows hassles experienced in a day has nonlinear relationship to levels of anxiety
+    #at high levels of hassles, the next hassle has a much greater impact on anxiety
+    #Transforming the hassles variable
+    #can try fitting a model not only to hassles, but to hassles squared / hassles cubed
+    #Different possible fits
+    #many transformations (^2, ^3, Exp)
+    #I(): treat an expression mathematically/literally (not as an interaction) when making a power transformation
+    #can compare different models with R^2; also validate using cross validation and check RMSE
+  #Logistic Regression to predict probabilities
+    #predicting probabilities can only be in range 0 or 1
+    #example: predicting Duchenne Muscular Dystrophy would have an outcome of 0 (false) or 1 (True)
+    #A linear regression model would predict probabilities outside range 0-1
+    #Logistic Regression: counterpart to linear regression
+    #assumes inputs are additive and linear in the log-odds of the outcome
+    #odds is the ratio of the probability that an event occurs to the probability that it does not
+    #a linear model's family: describes error distribution of the model
+      #logistic regression: family = binomial
+    #fit logistic regression models in R with glm() function
+  glm(formula, data, family)
+  glm(formula, data, family = binomial)
+    #glm assumes two possible outcomes, a & b
+    #model returns prob(b) - usually recommended that outcomes are coded as 0-False, 1-True 
+    #read coefficients for logistic regression as in linear model
+    #positive coefficient = more likely
+    #value  = harder to gauge, as it returns the log odds
+  #Predicting with a glm() model
+  predict(model, newdata, type = "response")
+    #newdata: by default, training data
+    #to get probabilities: use type = "response"
+      #by default, returns log odds
+      #note, exponentiating log odds returns odds ratio
+        #e.g. if log-odds are 0.014; exp(0.014) = 1.01; that odds of outcome with that variable is 1.01 times the odds without that variable
+  #DMD Model
+  model <- glm(has_dmd ~ CK + H, data = train, family = binomial)
+  test$pred <- predict(model, newdata = test, type = "response")
+    #now with this model, all outcomes are between 0 & 1
+  #Evaluating a logistic regression model: pseudo-R^2
+    #squared error & RMSE are not good measures for logistic regression models
+    #use deviance and pseudo R^2
+    #where R^2 = 1-(RSS/SSTot); PseudoR^2 = 1 - deviance/null deviance
+    #where Pseudo R^2 is deviance explained
+    #where deviance is analogous to variance (RSS)
+    #where null deviance is similar to SSTot
+    #A good fit gives pseudoR^2 near 1
+    #can glance(model) to get deviance & null deviance; or wrapChiSqTest(model) to get pseudo-R2 directly
+  Test data
+  test %>% 
+      mutate(pred = predict(model, newdata = test, type = "response")) %>%
+      wrapChiSqTest("pred", "has_dmd", TRUE)
+  #The Gain Curve Plot
+    #great for logistic regerssion models
+  GainCurvePlot(test, "pred","has_dmd", "DMD model on test")
+    #Wizard curve (green) shows how a perfect model would sort events
+    #in example, it sorts all women with DMD gene first
+    #Blue curve shows how model's probability scores would sort events
+    #Would want women who carry DMD gene to have higher probability scores than women who don't
+    #Closer blue curve is to green, better model's probability estimates are for identifying positive instances
+  #
