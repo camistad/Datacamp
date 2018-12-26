@@ -329,6 +329,7 @@ model.matrix(WtLoss24 ~ Diet + Age + BMI, data = diet)
   model <- glm(has_dmd ~ CK + H, data = train, family = binomial)
   test$pred <- predict(model, newdata = test, type = "response")
     #now with this model, all outcomes are between 0 & 1
+    #note have to specify type = "response" - otherwise predict will return log odds rather than probability
   #Evaluating a logistic regression model: pseudo-R^2
     #squared error & RMSE are not good measures for logistic regression models
     #use deviance and pseudo R^2
@@ -350,4 +351,138 @@ model.matrix(WtLoss24 ~ Diet + Age + BMI, data = diet)
     #Blue curve shows how model's probability scores would sort events
     #Would want women who carry DMD gene to have higher probability scores than women who don't
     #Closer blue curve is to green, better model's probability estimates are for identifying positive instances
+  #Poisson and quasipoisson regression to predict counts
+    #For count data
+  #Predicting Counts
+    #Linear regression: predicts values in [-inf, inf]
+    #Counts: integers in range [0, inf]
+    #thus, predicting counts is a non-linear problem, because counts are restricted to non-negative and integral
+      #as in have to be at least 0 and have to be an integer
+    #counterpart to linear regression for count data is poisson or quasipoisson regression
+  #Poisson/Quasiopoisson Regression
+    #also a generalized linear model
+    #family: either poisson or quasipoisson
+    #assumes inputs additive and linear with respect to log(count)
+    #for poisson regression: outcome is an integer that represents a count or rate
+      #count: e.g. number of traffic tickets a driver gets
+      #rate: e.g. number of website hits/day
+    #for poisson regression: prediction is expected rate or intensity (not integral)
+      #expected # traffic tickets, expected hits/day
+    #poisson regression assumes process predicting counts has a poisson distribution (mean(y) = var(y))
+    #if var(y) much different from mean(y) then quasipoisson
+    #generally requirs a large sample size
+    #if rates/counts you want to predict >> 0 (much larger than 0) - regular regression is fine
+  #Example: Predicting Bike Rentals
+    #here you have count of bikes rented by hour, for first 2 weeks of january, organized by day
+    #want model to predict hourly bike count as a function of time of day, type of day, and weather
+  bikesJan %>% 
+      summarize(mean = mean(cnt), var = var(cnt))
+
+         mean      var
+   1 130.5587 14351.25
+  #Since var(cnt) >> mean(cnt) \rightarrow→ use quasipoisson
+
+  fmla <- cnt ~ hr + holiday + workingday + 
+      weathersit + temp + atemp + hum + windspeed
+
+  model <- glm(fmla, data = bikesJan, family = quasipoisson)
+    #as with logistic regression, use pseudo-R-Squared to check goodness of fit
+  glance(model) %>%
+      summarize(pseudoR2 = 1 - deviance/null.deviance)
+
+      pseudoR2
+   1 0.7654358
+    #predict function takes model and data to predict on; still requires type = "response" specification
+    #e.g. apply model to new data for february
+    #plot predictions vs the actual counts
+  predict(model, newdata = bikesFeb, type = "response")
+    #can then calculate RMSE of February model
+    #RMSE returns ~69 - therefore prediction is off by about 69 rentals per hour (1/2 of the SD of the rental rates from the mean)
+  #GAM to learn non-linear transformation
+    #Generalized additive models (GAMs): output depends additively on unknown smooth functions of input variables
+    #A GAM learns the functions s_i and the intercept b0 that best fit the data
+    #y ~ b0 + s1(x1) + s2(x2) + ....
+  #Learning Non-Linear Relationships
+    #Recall hassles data; if want to model non-linear relationship between anxiety & hassles but unsure quad/cubic etc. 
+    #use GAM to learn the relationship
+  #gam() in the mgcv package
+  gam(formula, family, data)
+    #family: gaussian(default) is regular regression; binomial is probabilities; poisson/quasipoisson is counts
+    #best for larger datasets (since more likely to overfit)
+  #The s() function
+    #to specify that an input has a non-linear relationship with the outcome, use s() function in the formula
+  anx ~ s(hassles)
+    #s() designates that variable should be non-linear
+    #use s() with continuous variables (more than about 10 unique values)
+    #not recommended to use s with categorical variables
+  #Revisit the hassles data
+    #last time tried 3 variations: linear, quadratic, and cubic
+  #GAM of the hassles data
+  model <- gam(anx ~ s(hassles), data = hassleframe, family = gaussian)
+  
+  summary(model)
+
+   ...
+   
+   R-sq.(adj) =  0.619   Deviance explained = 64.1%
+   GCV = 49.132  Scale est. = 45.153    n = 40
+    #specify in formula that you want non-linear fit to hassles variable, use family gaussian
+    #Deviance explained == pseudoR^2
+  #Examining the Transformations
+    #Calling plot on the model gives plots of the variable transformations that the algorithm learned
+    #to get y-values of these plots, call predict() on the model with argument type "terms"
+    #to make predictions with the model, call predict() with argument, type = "response"
+    #note that calling predict on gam models returns a matrix so convert to numeric with as.numeric
+  as.numeric(predict(gammodel, newdata = df))
+    #comparing GAM to previous models on training data, see that GAM identified relationship close to cubic model except at high ends
+    #looking at GAM performance, see better than linear, but not as good as quadratic or cubic (use RMSE of this model compared to quad/cubic/linear)
+    #note that small data set -> noisier GAM
+    #Takeaway: while knowing appropriate transformation is best, using GAM is good if you don't know best transform
+  #The Intuition behind tree-based methods
+    #ensembles of decision trees: for both regression & classification
+  #Example: predict animal IQ from gestation time & litter size
+    #have IQ (scaled so human IQ is 1), gestation time, litter size 
+  #Decision Tree
+    #use decision tree: which learn rules of the form: if a AND b AND c THEN y
+    #trees can express non-linear concepts like intervals, non-monotonic relationships
+    #trees can express non-additive interacts because AND is similar to multiplication
+    #A tree model for intelligence expresses that species with average litter size < 1.15 & gestation >= 268 leads to IQ  = 0.315
+    #find that tree model fits better than linear model in that RMSE is lower
+    #but trees only give course grain predictions (only 6 outcomes) whereas linear models give continuous predictions
+  #It's hard for trees to express linear relationships
+    #trees predict axis aligned regions; so harder to express truly linear relationships
+    #its hard to express lines with steps
+    #can create more splits on data to build deeper trees; danger of overfitting when too complex
+    #shallow trees with too few splits can be too coarse grained in prediction
+  #Ensembles of Trees
+    #model made up of several trees will give finer grained predictions and usually better quality models than single trees
+    #Two ensemble methods: Random Forests & gradient boosted trees
+  #Random Forests
+    #random forests try to fix issues with decision trees by building multiple trees from the training data
+    #multiple diverse decision trees averaged together -> reduces overfit, increases model expressiveness, finer grain predictions
+  #Building a Random Forest Model
+    #each indiv tree grown from random sample of training data
+    #1. draw bootstrapped sample from training data
+    #2. For each sample grow a tree; at each node, pick best variable to split on (from a random subset of all variables); continue until tree is grown
+    #3. to score a datum, evaluate it with all the trees and average the results
+  #Example: Bike Rental Data
+    #train a model on data from january, evaluate on february
+  #Random Forests with ranger()
+    #use ranger package & ranger() function
+    #ranger() take s a formula, the training data, and the number of trees
+  model <- ranger(fmla, bikesJan, num.trees = 500, respect.unordered.factors = "order")
+    #if outcome variable is continuous, ranger automatically assumes regression vs. classification
+    #num.trees: default 500; use at least 200
+    #mtry - umber of variables to tr at each node (default: sqrt of the total number of variables
+    #respect.unordered.factors - tells ranger() how to treat categorical
+      #recommend set to "order"; tells ranger to safely & meaningfully encode ctgrl vars as numbers
+    #faster than converting to indicator when categorical variable has high # of possible values
+    #printing ranger model will display out of bag estimate of the model's R^2 & MSE
+      #use as estimates of how model will perform on future data
+  #Predicting with a ranger() model
+    #predict() takes model & new dataset
+    #returns an object with a field called predictions, containing the predicted outcomes
+  bikesFeb$pred <- predict(model, bikesFeb)$predictions
+    #calculating RMSE shows that Random forest has lower RMSE than quasipoisson
+    #can also compare predictions vs. actual hourly bike rentals via scatterplot, or by plotting data as f(n) of time
   #
