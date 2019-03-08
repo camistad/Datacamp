@@ -1,1 +1,107 @@
+#Hierarchical and Mixed Effects Models
 
+#Video 1
+#What is a hierarchical model?
+  #data can have several types of structure, including being nested within itself, making the data "hierarchical"
+  #Analyze data using lme4 package
+  #4 Parts
+    #1. go over basic parts of a mixed effects model (e.g. using student test scores)
+    #2. Learn how apply and interpret results of a linear mixed-effects regression or model
+    #3. Learn how to use a generalized linear mixed effects model
+    #4. Apply mixed effect models to time-series analysis as part of a repeated measures analysis
+#Why use a hierarchical model?
+  #Sometimes data is nested within itself, observations become dependent 
+  #Pool information across small sample sizes (unequal sample sizes between groups)
+    #e.g. student test scores, nested within classrooms of varying size
+    #treating classrooms as a "random effect" within the model, we can pool
+    #shared information about means across the classrooms within the same school
+  #Repeated observations across groups or individuals
+    #repeated-measures analysis counts as a hierarchical model, allows us to correct for this
+#Other names for hierarchical models
+  #a) Nested models: because data is nested within groups (e.g. students nested in classrooms)
+  #b) hierarchical models: because data has a hierarchy
+  #c) multi-level models: because we have two or more levels of interest
+  #d) Regression framework: "Pool" information, "Random-effect" versus a "fixed effect", 
+  #"Mixed-effect" (linear mixed-effect model; LMM), Linear mixed-effect regression (lmer)
+  #e)a multilevel covariate may sometime be call a "random effect" that "pools" information across groups
+  #f) Repeated sampling: "repeated measures", "Paired tests"
+#Example school test scores
+  #examine sample of kindergarten and first grade students; assess how their math knowledge improved
+  #Several datasets at different levels: 
+    #student level variables: student id, math test-score gain, math kindergarten score, gender, minority status
+    #classroom-teacher level: 
+    #school level
+#Exploring multiple levels: classrooms and schools
+  #Students learn within classrooms and classrooms exist withinn schools
+  #aggregating student scores by classroom/school can account for lack of independence
+  #hierarchical models avoid aggregation by modeling this structure
+  
+#Video 2
+#Parts of a regression
+  #Slopes and intercepts
+  #linear regression == linear model
+  #in basic model, we examine mean across all groups
+    #given the term beta: it's the intercept
+    #also include error term, epsilon
+    #y = B + e
+#Intercepts
+  #For models with multiple intercepts (e.g. two groups, discrete predictors), we can structure the model two ways
+    #1. use a global intercept beta0 and then model the effects of groups 2 and 3 compared to the global intercept
+    y = B0 + B2x2 + B3x3 + e
+    #2. model each group as its own intercept
+    y = B1x1 + B2x2 + B3x3 + e
+  #Use option 1 if: interested in estimating how two treatments differed from a reference
+  #Use option 2 if: interested in estimating the mean of each group
+    #note option 2 is essentially an Analysis of Variance (ANOVA)
+#Linear models in R
+  #the base function lm() builds linear models
+  lm(formula, data)
+  lm( y ~ x, data = myData)
+  #to run an ANOVA, we can wrap the linear model's output in the anova() function
+  anova(lm(y~x, data = myData))
+  #hence you can use intercepts to build a linear model for discrete predictor variables
+  #Slopes are for looking at continuous predictor variables
+#A simple linear regression with slopes
+  #the most basic regression includes a response variable, y, an intercept, beta0, a slope beta1, and an erro term
+  y ~ B0 + B1x + e
+  #The slope predicts how the expected value changes because of the continuous predictor
+#Multiple regression
+  #The simple linear regression can expand to include multiple response variables
+  y ~ B0 + B1x1 + B2x2 + ... + e
+  #These different response can include both discrete predictors (with corresponding intercepts)
+  #and continuous predictors with corresponding slopes
+#Multiple regression caveats
+  #things to note about multiple regression
+  #1. Independence of predictor variables: predictor variables can change the estimates
+  #for other predictors if both are not independent (small deviations can cause quantitative changes to the model if parameters are added or dropped)
+  #large deviations can cause qualitative and statistical changes to the model
+  #2. The previous consideration requires us to say "estimates have been corrected fro" other variables
+  #3. Simpson's paradox: missing important predictors can make our model wrong
+  #4. Only linear: multiple regression assumes linearity
+  #5. We may need to consider interactions, which occur when groups have different slopes
+  #linear models in R is relatively straightforward but has some quirks
+#Multiple regression in R tips
+  #1.  a minus 1 is needed to estimate an intercept for each group rather than the intercept relative to the first group
+  lm(y ~ x - 1) - estimates an intercept for each x
+  #2. if a predictor x is numeric, R treats it as a slope
+    #fix this by converting predictors to factors
+  #3. predictors may need scaling; if one predictor is in cm and the other is in 1000 cm
+    #using km for second predictor would be more appropriate
+    #when using time for a slope estimate, you may want to use rescale
+    #use 0 for the start
+  #4.interaction shortcuts; use * for interactions
+  lm(y ~ x1 + x2 + x1:x2) == lm(y ~ x1 * x2)
+#Refresher of running and plotting a linear regression in R
+regModel <- lm(response ~ predictor, data = regDemo
+summary(regModel)
+regModel
+regCoefPlot <- tidy(regModel) # extract coefficients using tidy function from broom:: 
+
+ggplot(regDemo, aes(x = predictor, y = response) ) +
+geom_point() + 
+theme_minimal() + 
+geom_abline( intercept = regCoefPlot$estimate[1] ##better than geom_smooth to use abline, as abline extends to complicated models
+             slope = regCoefPlot$estimate[2] )
+  
+         
+    
