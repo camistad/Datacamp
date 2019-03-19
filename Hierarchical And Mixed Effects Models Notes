@@ -103,5 +103,55 @@ theme_minimal() +
 geom_abline( intercept = regCoefPlot$estimate[1] ##better than geom_smooth to use abline, as abline extends to complicated models
              slope = regCoefPlot$estimate[2] )
   
-         
+#Video 3
+#Random-effects in regressions
+  #when variables are nested within another distribution
+  #e.g. students nested in classrooms, nested in schools
+  #nested relationships are called "multi-level models" 
+  #mathematically, this is called a mapping from one distribution to another
+  #practically, MLM gives us a way to pool/share information across replicates
+  #thus, MLM manages outliers; outliers from groups with small sample sizes have less
+    #of an impact if we treat it as a random effect
+  #simple random effect has the following equation (algebraic notation):
+    #y ~ Bix + e --- aka. relationship to data give i-th beta
+    #Bi ~ Normal(mu,sigma) --- random effect assumes Beta is drawn from a normal distribution with mean, mu, and DS, sigma
+  #In R, we use lme4 package; note: lme4 is upgrade of lmer package
+library(lme4)
+lmer( y ~ x + 1|randomGroup), data = myData)
+lmer( y ~ x + randomSlope|randomGroup), data = myData)
+  #with lme4 notation, need to specify a random effect
+  #to specify a random intercept, we use parentheses with a one-pipe-random effect group
+lmer( y ~ x + 1|randomGroup), data = myData
+  #to specify a random slope, we use parentheses slope - pipe - random effect group
+lmer( y ~ x + (randomSlope|randomGroup), data = myData)
+  #Random-effect intercepts
+    #fixed-effect parameters only use data for a specific group.
+    #random-effect parameters assume data share a common distribution
+      #for situations with small amounts of data or outliers, random-effect models can produce different estimates
+    #lme4 package fits mixed-effect models (models with both fixed- and random-effects) with lmer()
+      #random-effect intercepts use special syntax
+ lmer( y ~ x + (1|randomEffect), data = myData)
+
+  #Random-effect slopes
+    #when lme4 estimates a random-effect slope, it also estimates a random-effect intercept
+    #lmer() uses ( continuousPredictor | randomEffectGroup) for a random-effect slope
+  #you can extract and plot the fitted model using ggplot2  
+    #ggplot2 can plot many models using geom_smooth() or stat_smooth() but not all models
+    #one trick to plot models not part of ggplot2 is to use the predict() function
+    #predict can help you extract the predicted values for a fitted model.
+    #These points can be plotted with ggplot2 using geom_line()
+  
+#Video 4
+#School data
+  #Applying MLM to school data
+  #school dataset: examine if different factors affect how students learn math
+  #1. does sex of a student impact knowledge gain?
+  #2. does teacher's training impact gain and does the teacher's math knowledge impact gain
+  #3. plot the parameter estimates using ggplot2
+#Plotting and interpreting results
+  #you can usually see regression coefficients using summary()
+  #plotting the regression coefficients and their 95% CI can be another way to visualize and interpret
+    #a positive coefficient means, coefficient increase, expected response increases too
+    #if the 95% CI doesn't include zero, the coefficient can be considered statistically significant
+    
     
