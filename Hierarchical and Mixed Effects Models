@@ -1,1 +1,195 @@
+# Plot the data
+ggplot(data = studentData, aes(x = housepov, y = mathgain)) +
+    geom_point() +
+    geom_smooth(method = 'lm')
 
+# Fit a linear model
+summary( lm(mathgain ~ housepov , data =  studentData))
+
+#####
+
+# First, plot the housepov and mathgain at the classroom-level from the classData data.frame
+ggplot(data = classData, aes(x = housepov, y = mathgain)) +
+    geom_point() +
+    geom_smooth(method = 'lm')
+
+# Second, plot the housepov and mathgain at the school-level from the schoolData data.frame
+ggplot(data = schoolData, aes(x = housepov, y = mathgain)) +
+    geom_point() +
+    geom_smooth(method = 'lm')
+    
+#####
+
+# Now, compare your linear regression results from the previous expercise to the two new models
+summary( lm(mathgain ~ housepov, data = studentData)) ## student-level data
+summary( lm(mathgain ~ housepov, data = classData)) ## class-level data
+summary( lm(mathgain ~ housepov, data = schoolData)) ## school-level data
+
+#####
+
+# Plot the means of your data, predictor is your x-variable, response is your y-variable, and intDemo is your data.frame
+ggIntDemo <- ggplot(intDemo, aes(x = predictor, y = response) ) +
+    geom_point() +
+    theme_minimal() + stat_summary(fun.y = "mean", color = "red",
+                                   size = 3, geom = "point") +
+    xlab("Intercept groups")
+print(ggIntDemo)
+
+# Fit a linear model to your data where response is "predicted by"(~) predictor
+intModel <- lm( response ~ predictor - 1 , data = intDemo)
+summary(intModel)
+
+# Extract out the coefficient estimates using tidy
+intCoefPlot <- tidy(intModel)
+
+# Remove the word "predictor" for the coefficients
+intCoefPlot$term <- factor(gsub("predictor", "", intCoefPlot$term))
+
+# Add the new points to the previous plot
+ggIntDemo + geom_point(data = intCoefPlot,
+                           aes(x = term, y = estimate),
+                           position = position_dodge(width = 0.4),
+                           color = 'blue', size = 8, alpha = 0.25)
+                           
+#####
+
+# plot the raw data using ggplot2
+ggplot(data = multIntDemo, aes(x = x, y = response)) + 
+	geom_point() + stat_smooth(method = 'lm')
+
+# build a linear model with response predicted by x 
+lm(response ~ x, data = multIntDemo)
+
+#####
+
+# plot the data with each group as its own color
+ggplot(data = multIntDemo, aes(x = x, y = response, color = group)) + 
+	geom_point()
+
+# build a linear model with response predicted by group and x
+lm(response ~ group + x, data = multIntDemo)
+
+#####
+
+# plot the data using ggplot2 using a different color for each group
+ggplot(data = multIntDemo, aes(x = x, y = response, color = group)) + 
+	geom_point() + stat_smooth(method = 'lm')
+
+# build a linear model with response predicted by x including an interaction with group 
+lm(response ~ group * x, data = multIntDemo)
+
+#####
+
+# Run model
+outLmer <- lmer( response ~ x + (1|group), data = multIntDemo)
+
+# Look at model outputs 
+summary( outLmer )
+tidy( outLmer )
+
+#####
+
+# First, re-run the model to re-load it
+outLmer <- lmer( response ~ x + (1|group), data = multIntDemo)
+
+# Second, save the model predictions as a column to the original data.frame
+multIntDemo$lmerPredict <- predict(outLmer)
+
+# Third, plot the original data
+ggmultIntgDemo2 <- ggplot( multIntDemo, aes(x = x, y = response) ) +
+        geom_point(aes(color = group))+
+        theme_minimal() +
+        scale_color_manual(values = c("blue", "black", "red")) +
+        geom_abline(data = multIntDemo,
+                    aes(intercept = intercept, slope = slope, color = group))
+
+# Fourth, use the predicted values to plot the new outputs
+ggmultIntgDemo2 +
+	geom_line( data =  multIntDemo,
+               aes(x = x, y = lmerPredict, color = group),
+               linetype = 2)
+               
+#####
+
+# Random-effect slopes
+outLmer2 <- lmer( response ~ ( x |group), multIntDemo)
+summary(outLmer2)
+tidy(outLmer2)
+
+#####
+
+# First, re-run the model to re-load it
+outLmer2 <- lmer( response ~ x + (x|group), data = multIntDemo)
+
+# Second, save the model predictions as a column to the original data.frame
+multIntDemo$lmerPredict <- predict(outLmer2)
+
+# Third, plot the original data
+ggmultIntgDemo2 <- ggplot( multIntDemo, aes(x = x, y = response) ) +
+        geom_point(aes(color = group))+
+        theme_minimal() +
+        scale_color_manual(values = c("blue", "black", "red")) +
+        geom_abline(data = multIntDemo,
+                    aes(intercept = intercept, slope = slope, color = group))
+
+# Fourth, use the residual to plot the new outputs
+ggmultIntgDemo2 +
+	geom_line( data =  multIntDemo,
+               aes(x = x, y = lmerPredict, color = group),
+               linetype = 2)
+
+#####
+
+# Mixed effect model
+lmerModel <- lmer(mathgain ~ 
+                  sex + mathprep + mathknow + 
+                  (1|classid) + (1|schoolid), 
+                  data = studentData, na.action = "na.omit",
+                  REML = TRUE)
+summary(lmerModel)
+
+#####
+
+# Extract out the coefficents 
+modelOutPlot <- tidy(lmerModel, conf.int = TRUE)
+
+# Grab the coefficents of interest
+modelOutPlot <- modelOutPlot[ modelOutPlot$effect =="fixed" &
+                               modelOutPlot$term != "(Intercept)", ]
+
+# plot the coefficients of interest
+ggplot(modelOutPlot, aes(x = term, y = estimate,
+                             ymin = conf.low,
+                             ymax = conf.high)) +
+	theme_minimal() +
+	geom_hline(yintercept = 0.0, color = 'red', size = 2.0) +
+	geom_point() +
+	geom_linerange() + coord_flip()    
+
+#####
+
+# Extract out the coefficents 
+modelOutPlot <- tidy(lmerModel, conf.int = TRUE)
+
+# Grab the coefficents of interest
+modelOutPlot <- modelOutPlot[ modelOutPlot$effect =="fixed" &
+                               modelOutPlot$term != "(Intercept)", ]
+
+# plot the coefficients of interest
+ggplot(modelOutPlot, aes(x = term, y = estimate,
+                             ymin = conf.low,
+                             ymax = conf.high)) +
+	theme_minimal() +
+	geom_hline(yintercept = 0.0, color = 'red', size = 2.0) +
+	geom_point() +
+	geom_linerange() + coord_flip()    
+
+#####
+
+
+
+#####
+
+
+
+#####
