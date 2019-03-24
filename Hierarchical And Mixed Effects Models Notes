@@ -164,11 +164,25 @@ lmer( y ~ x + (randomSlope|randomGroup), data = myData)
   #Small populations can be subject to random stochastic (randomly determined) - aka. demographic stochasticity
   #random-effects is one solution to this problem
   #e.g. assume avg birth rate = 1 baby / 10 women of childbearing age
-    #In pop 10000 women, expect 1000 births/year
-    #In pop 10 women, can expect anywhere from 0 - 10 births because chance
+    #In pop of 10000 women, expect 1000 births/year
+    #In pop of 10 women, can expect anywhere from 0 - 10 births because chance
   #US - each state has separate "counties" (Louisiana = "Parishes")
     #marketing firm may want to know which counties have higher birth rates (sell more baby ads)
     #political scientist may examine how policies vary across counties, affect birth rates
-    #
+  #Case study: does mother's age impact birth rate
+    #plot shows each county's total pop on X-axis, birth rate on y-axis (Funnel shape)
+    #see that smaller counties have wide mix of high & low birth rates
+      #due to demographic stochasticity; higher pop counties stick closer to average
+#LMER syntax in R
+  #lmer() in lme4 package uses formula similar to linear model in base R
+library(lme4)
+lmer( y ~ x + (Random-effect), data = myData )
+  #note: lmer() must include random-effect in parentheses or returns an error
+  #random-effect can take different forms
+    #random intercept with a fixed mean       -- ( 1 | group ):         Random intercept with fixed mean
+    #nested intercepts                        -- ( 1 | gl/g2 ):         Intercepts vary among g1 & g2 within g2
+    #multiple intercepts                      -- ( 1 | g1) + (1 | g2):  Random intercepts for 2 variables
+    #correlated random slopes & intercepts    -- x + (x | g):           Correlated random slope and intercept
+    #uncorrelated random slopes & intercepts  -- x + (x || g):          Uncorrelated random slope and intercept
   
     
