@@ -184,5 +184,49 @@ lmer( y ~ x + (Random-effect), data = myData )
     #multiple intercepts                      -- ( 1 | g1) + (1 | g2):  Random intercepts for 2 variables
     #correlated random slopes & intercepts    -- x + (x | g):           Correlated random slope and intercept
     #uncorrelated random slopes & intercepts  -- x + (x || g):          Uncorrelated random slope and intercept
-  
-    
+#Exercise 1: Random-effect intercepts
+  #Start off with building a global intercept model
+globalIntercept <- lmer(y ~ (1|random intercept), data = myData)
+summary(globalIntercept)
+  #Then you can add additional fixed effect predictors
+    #Numeric variables that are added as fixed effects, will have the corresponding coefficient treated as a slope
+#Exercise 2: Random-effect slopes
+  #last exercise let you account for each state having its own intercept
+  #this exercise, you estimate a random-effect slope for each state
+  #e.g. maybe log10 (total pop of each county) changes birth-rate and varies by state
+  #recall you specify RE slope using (slope|group)
+#Exercise 3: Uncorrelated random-effect slope
+  #default settings on lme4 assumes slopes and intercept within each group were correlated for the random-effect estimates
+  #using uncorrelated random-effects is 1 method to simplify the model
+  #to fit uncorrelated random-effect slope, use || rather than | within lmer() syntax
+  #Note that sometimes setting this returns a "singular fit" warning
+    #singular fit suggests a more complex model is required
+    #The Corr column denotes the correlation between the RE slope and the RE intercept
+    #if the Corr is perfectly negative, one cannot estimate independent of each other
+#Exercise 4: Fixed and random-effect predictor
+  #Sometimes models can have the same predictor as both a fixed and random effect
+  #e.g. estimating the effect of the average age of mothers in a particular county on birth rates
+    #as a fixed effect: you estimate the effect of  amother's age across all locations
+    #as a random efect: you account (or correct) for different slope estimates among states
+
+#Video 6
+  #Understanding and reporting the output of a lmer
+  #How to extract and understand the output from these mixed-effect models
+  #Refresher: we built a model to predict the birth rate for each county 
+    #this model includes the average age of the mother within each county as a fixed-effect 
+    #and as a random-effect within each state; specified State as a random intercept
+out <- lmer(BirthRate ~ AverageAgeofMother + (AverageAgeofMother|State), data = countyBirthsData)
+  #typing "out" in the console prints the model's output
+  #several extra features over and above a linear model
+    #1. fit by REML: we fit model using REML (Restricted maximum likelihood method) - used because numerically
+      #fitting a mixed-effects model can be difficulty and normal maximum likelihood (ML) often fails
+    #2. input formula
+    #3. REML criterion at convergence: model diagnostic, useful if model not converging
+    #4. Random effects table: shows standard deviations for the random effect and the residuals
+    #5. number of observations and groups
+    #6. Fixed effects table: similar to output of a linear model
+  #summary() produces additional details
+    #1. summary details on residuals: e.g. shows variance now too
+    #2. fixed effects now include SE & t-values, but not p-values
+    #3. Correlation of Fixed Effects: correlations of the estimators with the intercept
+      #generally, if we "repeat" the experiment, we would expect a negative correlation b/w fixed-effect & intercept
