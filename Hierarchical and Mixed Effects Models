@@ -186,7 +186,63 @@ ggplot(modelOutPlot, aes(x = term, y = estimate,
 
 #####
 
+# Build a lmer with State as a random effect.
+birthRateStateModel <- lmer(BirthRate ~ (1 | State), data =countyBirthsData)
+# Look at the model's summary and the residuals. 
+summary(birthRateStateModel)
+plot(birthRateStateModel)
+# Plot the predicted values from the model on top of the plot shown during the video.
+countyBirthsData$birthPredictState <-  predict(birthRateStateModel, countyBirthsData)
+ggplot() + 
+    theme_minimal() +
+    geom_point(data =countyBirthsData,
+               aes(x = TotalPopulation, y = BirthRate)) + 
+    geom_point(data = countyBirthsData,
+               aes(x = TotalPopulation, y = birthPredictState),
+               color = 'blue', alpha = 0.5) 
 
+#####
+
+# Include the AverageAgeofMother as a fixed effect within the lmer and state as a random effect
+ageMotherModel <- lmer( BirthRate ~ AverageAgeofMother + (1|State),
+                       countyBirthsData)
+summary(ageMotherModel)
+
+#####
+
+# Include the AverageAgeofMother as fixed-effect and State as a random-effect
+model_A <- lmer( BirthRate ~ AverageAgeofMother + (1|State), countyBirthsData)
+tidy(model_A)
+
+# Include the AverageAgeofMother as fixed-effect and LogTotalPop and State as random-effects
+model_B <- lmer( BirthRate ~ AverageAgeofMother + (LogTotalPop|State), countyBirthsData)
+tidy(model_B)
+
+#####
+
+# Include AverageAgeofMother as fixed-effect and LogTotalPop and State as uncorrelated random-effects
+model_C <- lmer( BirthRate ~ AverageAgeofMother + (LogTotalPop||State),
+                       countyBirthsData)
+# Compare outputs of both models 
+summary(model_B)
+summary(model_C)
+
+#####
+
+# Include AverageAgeofMother as fixed-effect and LogTotalPop and State as uncorrelated random-effects
+model_C <- lmer( BirthRate ~ AverageAgeofMother + (LogTotalPop||State),
+                       countyBirthsData)
+# Compare outputs of both models 
+summary(model_B)
+summary(model_C)
+
+#####
+
+# Construct a lmer() 
+out <- lmer(BirthRate ~ AverageAgeofMother + (AverageAgeofMother|State), data = countyBirthsData)
+
+# Look at the summary
+summary(out)
 
 #####
 
